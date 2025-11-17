@@ -12,19 +12,41 @@ class ExampleRunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InType, O
   InType input_data_{};
 
   void SetUp() override {
-    input_data_ = kCount_;
+    input_data_ = generate_test_vector(kCount_);
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
-    return input_data_ == output_data;
+    if (input_data_.empty()) {
+      return output_data == INT_MIN;
+    }
+    
+    int expected_max = input_data_[0];
+    for (size_t i = 1; i < input_data_.size(); ++i) {
+      if (input_data_[i] > expected_max) {
+        expected_max = input_data_[i];
+      }
+    }
+    return expected_max == output_data;
   }
 
   InType GetTestInputData() final {
     return input_data_;
   }
+
+ private:
+  std::vector<int> generate_test_vector(int size) {
+    std::vector<int> vec(size);
+    for (int i = 0; i < size; ++i) {
+      vec[i] = (i * 17 + 13) % 1000;
+    }
+    if (!vec.empty()) {
+      vec[size / 2] = 1500;
+    }
+    return vec;
+  }
 };
 
-TEST_P(ExampleRunPerfTestProcesses, RunPerfModes) {
+TEST_P(BadanovAMaxVecElemPerfTests, RunPerfModes) {
   ExecuteTest(GetParam());
 }
 
