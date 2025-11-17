@@ -20,10 +20,10 @@
 
 namespace badanov_a_max_vec_elem {
 
-class BadanovAMaxVecElemFuncTest : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
+class BadanovAMaxVecElemFuncTests : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
  public:
   static std::string PrintTestParam(const TestType &test_param) {
-    return std::to_string(std::get<0>(test_param)) + "_" + std::get<1>(test_param);
+    return std::to_string(std::get<0>(test_param));
   }
 
  protected:
@@ -91,9 +91,9 @@ const auto kTestTasksList =
 
 const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
 
-const auto kPerfTestName = BadanovAMaxVecElemFuncTest::PrintFuncTestName<BadanovAMaxVecElemFuncTest>;
+const auto kPerfTestName = BadanovAMaxVecElemFuncTests::PrintFuncTestName<BadanovAMaxVecElemFuncTests>;
 
-INSTANTIATE_TEST_SUITE_P(PicMatrixTests, BadanovAMaxVecElemFuncTest, kGtestValues, kPerfTestName);
+INSTANTIATE_TEST_SUITE_P(PicMatrixTests, BadanovAMaxVecElemFuncTests, kGtestValues, kPerfTestName);
 
 }  // namespace
 
