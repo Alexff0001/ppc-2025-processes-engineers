@@ -93,7 +93,7 @@ const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
 
 const auto kPerfTestName = BadanovAMaxVecElemFuncTests::PrintFuncTestName<BadanovAMaxVecElemFuncTests>;
 
-INSTANTIATE_TEST_SUITE_P(PicMatrixTests, BadanovAMaxVecElemFuncTests, kGtestValues, kPerfTestName);
+INSTANTIATE_TEST_SUITE_P(VectorMaxTests, BadanovAMaxVecElemFuncTests, kGtestValues, kPerfTestName);
 
 }  // namespace
 
