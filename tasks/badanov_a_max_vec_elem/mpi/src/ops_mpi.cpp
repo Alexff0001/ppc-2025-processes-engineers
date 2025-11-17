@@ -35,7 +35,7 @@ bool BadanovAMaxVecElemMPI::RunImpl() {
 
   int total_elem = 0;
   if(rank == 0) {
-    total_elem = vec.size();
+    total_elem = tmp_vec.size();
   }
 
   MPI_Bcast(&total_elem, 1, MPI_INT, 0, MPI_COMM_WORLD);
@@ -49,7 +49,7 @@ bool BadanovAMaxVecElemMPI::RunImpl() {
 
   int start_i;
   int end_i;
-  
+
   if(rank < remainder) {
     start_i = rank*(base_size +1);
     end_i = start_i + (base_size + 1);
@@ -61,8 +61,8 @@ bool BadanovAMaxVecElemMPI::RunImpl() {
 
   int max_elem_local = INT_MIN;
   for(int i = start_i; i < end_i; i++) {
-    if(vec[i] > max_elem_local) {
-      max_elem_local = vec[i];
+    if(tmp_vec[i] > max_elem_local) {
+      max_elem_local = tmp_vec[i];
     }
   }
 

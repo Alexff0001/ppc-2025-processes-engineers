@@ -28,49 +28,63 @@ class BadanovAMaxVecElemFuncTest : public ppc::util::BaseRunFuncTests<InType, Ou
 
  protected:
   void SetUp() override {
-    int width = -1;
-    int height = -1;
-    int channels = -1;
-    std::vector<uint8_t> img;
-    // Read image in RGB to ensure consistent channel count
-    {
-      std::string abs_path = ppc::util::GetAbsoluteTaskPath(PPC_ID_badanov_a_max_vec_elem, "pic.jpg");
-      auto *data = stbi_load(abs_path.c_str(), &width, &height, &channels, STBI_rgb);
-      if (data == nullptr) {
-        throw std::runtime_error("Failed to load image: " + std::string(stbi_failure_reason()));
-      }
-      channels = STBI_rgb;
-      img = std::vector<uint8_t>(data, data + (static_cast<ptrdiff_t>(width * height * channels)));
-      stbi_image_free(data);
-      if (std::cmp_not_equal(width, height)) {
-        throw std::runtime_error("width != height: ");
-      }
-    }
-
-    TestType params = std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
-    input_data_ = width - height + std::min(std::accumulate(img.begin(), img.end(), 0), channels);
+    const TestType &params = std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
+    test_vector_ = std::get<1>(params);
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
-    return (input_data_ == output_data);
+    if (test_vector_.empty()) {
+      return output_data == INT_MIN;
+    }
+
+    int expected_result = test_vector_[0];
+    for (size_t i = 1; i < test_vector_.size(); ++i) {
+      if (test_vector_[i] > expected_result) {
+        expected_result = test_vector_[i];
+      }
+    }
+    return output_data == expected_result;
   }
 
   InType GetTestInputData() final {
-    return input_data_;
+    return test_vector_;
   }
 
  private:
-  InType input_data_ = 0;
+  std::vector<int> test_vector_;
 };
 
 namespace {
 
-TEST_P(BadanovAMaxVecElemFuncTest, MatmulFromPic) {
+TEST_P(BadanovAMaxVecElemFuncTests, FunctionalTests) {
   ExecuteTest(GetParam());
 }
 
-const std::array<TestType, 3> kTestParam = {std::make_tuple(3, "3"), std::make_tuple(5, "5"), std::make_tuple(7, "7")};
+TEST_P(BadanovAMaxVecElemFuncTests, CoverageTests) {
+  ExecuteTest(GetParam());
+}
 
+const std::array<TestType, 12> kTestParam = {
+    std::make_tuple(1, std::vector<int>{1, 2, 5, 3, 4, 7}),
+    std::make_tuple(2, std::vector<int>{-1, -2, -5, -3, -4, -7}),
+    std::make_tuple(3, std::vector<int>{4, -1, 5, -9, 3, -3}),
+    std::make_tuple(4, std::vector<int>{42}),
+    std::make_tuple(5, std::vector<int>{7, 7, 7, 7, 7}),
+    std::make_tuple(6, std::vector<int>{6, 1, 3, 9, 2, 1}),
+    std::make_tuple(7, std::vector<int>{200, 1500, 4000, 7000, 6000}),
+    std::make_tuple(8, std::vector<int>{-8, -5, 0, 10, 15, 20}),
+    std::make_tuple(9, std::vector<int>{-10, 1, 9, 14, 20}),
+    std::make_tuple(10, std::vector<int>{88, 20, 8, 3, -8}),
+    std::make_tuple(11, std::vector<int>{-8, 8, 17, 18, 19}),
+    std::make_tuple(12, []() {
+        std::vector<int> vec(1000);
+        for (size_t i = 0; i < vec.size(); ++i) {
+            vec[i] = static_cast<int>(i + 1);
+        }
+        vec[999] = 5000;
+        return vec;
+    }())
+  };
 const auto kTestTasksList =
     std::tuple_cat(ppc::util::AddFuncTask<BadanovAMaxVecElemMPI, InType>(kTestParam, PPC_SETTINGS_badanov_a_max_vec_elem),
                    ppc::util::AddFuncTask<BadanovAMaxVecElemSEQ, InType>(kTestParam, PPC_SETTINGS_badanov_a_max_vec_elem));
