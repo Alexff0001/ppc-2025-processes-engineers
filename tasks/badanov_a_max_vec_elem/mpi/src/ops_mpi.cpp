@@ -17,12 +17,12 @@ BadanovAMaxVecElemMPI::BadanovAMaxVecElemMPI(const InType &in) {
 }
 
 bool BadanovAMaxVecElemMPI::ValidationImpl() {
-  return (GetInput() > 0) && (GetOutput() == 0);
+  return !GetInput().size();
 }
 
 bool BadanovAMaxVecElemMPI::PreProcessingImpl() {
-  GetOutput() = 2 * GetInput();
-  return GetOutput() > 0;
+  
+  return true;
 }
 
 bool BadanovAMaxVecElemMPI::RunImpl() {
@@ -65,8 +65,8 @@ bool BadanovAMaxVecElemMPI::RunImpl() {
 }
 
 bool BadanovAMaxVecElemMPI::PostProcessingImpl() {
-  GetOutput() -= GetInput();
-  return GetOutput() > 0;
+
+  return true;
 }
 
 }  // namespace badanov_a_max_vec_elem
