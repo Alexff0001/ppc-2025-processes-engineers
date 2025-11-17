@@ -26,42 +26,53 @@ bool BadanovAMaxVecElemMPI::PreProcessingImpl() {
 }
 
 bool BadanovAMaxVecElemMPI::RunImpl() {
-  auto input = GetInput();
-  if (input == 0) {
-    return false;
-  }
-
-  for (InType i = 0; i < GetInput(); i++) {
-    for (InType j = 0; j < GetInput(); j++) {
-      for (InType k = 0; k < GetInput(); k++) {
-        std::vector<InType> tmp(i + j + k, 1);
-        GetOutput() += std::accumulate(tmp.begin(), tmp.end(), 0);
-        GetOutput() -= i + j + k;
-      }
-    }
-  }
-
-  const int num_threads = ppc::util::GetNumThreads();
-  GetOutput() *= num_threads;
-
+  std::vector<int>& tmp_vec = GetInput();
+  
   int rank = 0;
+  int world_size = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(MPI_COMM_WORLD, &world_size);
 
-  if (rank == 0) {
-    GetOutput() /= num_threads;
-  } else {
-    int counter = 0;
-    for (int i = 0; i < num_threads; i++) {
-      counter++;
-    }
+  int total_elem = 0;
+  if(rank == 0) {
+    total_elem = vec.size();
+  }
 
-    if (counter != 0) {
-      GetOutput() /= counter;
+  MPI_Bcast(&total_elem, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+  if(total_elem == 0) {
+    return true;
+  }
+  
+  int base_size = total_elem / world_size;
+  int remainder = total_elem % world_size;
+
+  int start_i;
+  int end_i;
+  
+  if(rank < remainder) {
+    start_i = rank*(base_size +1);
+    end_i = start_i + (base_size + 1);
+  }
+  else {
+    start_i = remainder * (base_size + 1) + (rank - remainder)* base_size;
+    end_i = std::min(start_i + base_size, total_elem);
+  }
+
+  int max_elem_local = INT_MIN;
+  for(int i = start_i; i < end_i; i++) {
+    if(vec[i] > max_elem_local) {
+      max_elem_local = vec[i];
     }
   }
 
-  MPI_Barrier(MPI_COMM_WORLD);
-  return GetOutput() > 0;
+  int max_elem_global = INT_MIN;
+  
+  MPI_Allreduce(&max_elem_local, &max_elem_global, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+
+  GetOutput() = max_elem_global;
+  return true;
+
 }
 
 bool BadanovAMaxVecElemMPI::PostProcessingImpl() {
