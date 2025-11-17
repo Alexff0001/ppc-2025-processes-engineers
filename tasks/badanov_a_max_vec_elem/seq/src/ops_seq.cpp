@@ -15,46 +15,33 @@ BadanovAMaxVecElemSEQ::BadanovAMaxVecElemSEQ(const InType &in) {
 }
 
 bool BadanovAMaxVecElemSEQ::ValidationImpl() {
-  return (GetInput() > 0) && (GetOutput() == 0);
+  
+  return !GetInput().empty();
 }
 
 bool BadanovAMaxVecElemSEQ::PreProcessingImpl() {
-  GetOutput() = 2 * GetInput();
-  return GetOutput() > 0;
+
+  return true;
 }
 
 bool BadanovAMaxVecElemSEQ::RunImpl() {
-  if (GetInput() == 0) {
-    return false;
-  }
+  int max_elem = GetInput()[0];
 
-  for (InType i = 0; i < GetInput(); i++) {
-    for (InType j = 0; j < GetInput(); j++) {
-      for (InType k = 0; k < GetInput(); k++) {
-        std::vector<InType> tmp(i + j + k, 1);
-        GetOutput() += std::accumulate(tmp.begin(), tmp.end(), 0);
-        GetOutput() -= i + j + k;
-      }
+  for(size_t i = 1; i < GetInput().size(); i++){
+    if(GetInput()[i] > max_elem) {
+      max_elem = GetInput()[i];
     }
   }
 
-  const int num_threads = ppc::util::GetNumThreads();
-  GetOutput() *= num_threads;
+  GetOutput() = max_elem;
 
-  int counter = 0;
-  for (int i = 0; i < num_threads; i++) {
-    counter++;
-  }
+  return true;
 
-  if (counter != 0) {
-    GetOutput() /= counter;
-  }
-  return GetOutput() > 0;
 }
 
 bool BadanovAMaxVecElemSEQ::PostProcessingImpl() {
-  GetOutput() -= GetInput();
-  return GetOutput() > 0;
+
+  return true;
 }
 
 }  // namespace badanov_a_max_vec_elem
