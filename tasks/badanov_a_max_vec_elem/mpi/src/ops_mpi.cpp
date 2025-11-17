@@ -17,7 +17,7 @@ BadanovAMaxVecElemMPI::BadanovAMaxVecElemMPI(const InType &in) {
 }
 
 bool BadanovAMaxVecElemMPI::ValidationImpl() {
-  return !GetInput().size();
+  return !GetInput().empty();
 }
 
 bool BadanovAMaxVecElemMPI::PreProcessingImpl() {
