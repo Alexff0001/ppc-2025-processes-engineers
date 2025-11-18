@@ -19,7 +19,7 @@ class BadanovAMaxVecElemPerfTests : public ppc::util::BaseRunPerfTests<InType, O
     if (input_data_.empty()) {
       return output_data == INT_MIN;
     }
-    
+
     int expected_max = input_data_[0];
     for (size_t i = 1; i < input_data_.size(); ++i) {
       if (input_data_[i] > expected_max) {
@@ -50,8 +50,8 @@ TEST_P(BadanovAMaxVecElemPerfTests, RunPerfModes) {
   ExecuteTest(GetParam());
 }
 
-const auto kAllPerfTasks =
-    ppc::util::MakeAllPerfTasks<InType, BadanovAMaxVecElemMPI, BadanovAMaxVecElemSEQ>(PPC_SETTINGS_badanov_a_max_vec_elem);
+const auto kAllPerfTasks = ppc::util::MakeAllPerfTasks<InType, BadanovAMaxVecElemMPI, BadanovAMaxVecElemSEQ>(
+    PPC_SETTINGS_badanov_a_max_vec_elem);
 
 const auto kGtestValues = ppc::util::TupleToGTestValues(kAllPerfTasks);
 

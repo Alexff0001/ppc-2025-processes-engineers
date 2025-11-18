@@ -64,30 +64,28 @@ TEST_P(BadanovAMaxVecElemFuncTests, CoverageTests) {
   ExecuteTest(GetParam());
 }
 
-const std::array<TestType, 12> kTestParam = {
-    std::make_tuple(1, std::vector<int>{1, 2, 5, 3, 4, 7}),
-    std::make_tuple(2, std::vector<int>{-1, -2, -5, -3, -4, -7}),
-    std::make_tuple(3, std::vector<int>{4, -1, 5, -9, 3, -3}),
-    std::make_tuple(4, std::vector<int>{42}),
-    std::make_tuple(5, std::vector<int>{7, 7, 7, 7, 7}),
-    std::make_tuple(6, std::vector<int>{6, 1, 3, 9, 2, 1}),
-    std::make_tuple(7, std::vector<int>{200, 1500, 4000, 7000, 6000}),
-    std::make_tuple(8, std::vector<int>{-8, -5, 0, 10, 15, 20}),
-    std::make_tuple(9, std::vector<int>{-10, 1, 9, 14, 20}),
-    std::make_tuple(10, std::vector<int>{88, 20, 8, 3, -8}),
-    std::make_tuple(11, std::vector<int>{-8, 8, 17, 18, 19}),
-    std::make_tuple(12, []() {
-        std::vector<int> vec(1000);
-        for (size_t i = 0; i < vec.size(); ++i) {
-            vec[i] = static_cast<int>(i + 1);
-        }
-        vec[999] = 5000;
-        return vec;
-    }())
-  };
-const auto kTestTasksList =
-    std::tuple_cat(ppc::util::AddFuncTask<BadanovAMaxVecElemMPI, InType>(kTestParam, PPC_SETTINGS_badanov_a_max_vec_elem),
-                   ppc::util::AddFuncTask<BadanovAMaxVecElemSEQ, InType>(kTestParam, PPC_SETTINGS_badanov_a_max_vec_elem));
+const std::array<TestType, 12> kTestParam = {std::make_tuple(1, std::vector<int>{1, 2, 5, 3, 4, 7}),
+                                             std::make_tuple(2, std::vector<int>{-1, -2, -5, -3, -4, -7}),
+                                             std::make_tuple(3, std::vector<int>{4, -1, 5, -9, 3, -3}),
+                                             std::make_tuple(4, std::vector<int>{42}),
+                                             std::make_tuple(5, std::vector<int>{7, 7, 7, 7, 7}),
+                                             std::make_tuple(6, std::vector<int>{6, 1, 3, 9, 2, 1}),
+                                             std::make_tuple(7, std::vector<int>{200, 1500, 4000, 7000, 6000}),
+                                             std::make_tuple(8, std::vector<int>{-8, -5, 0, 10, 15, 20}),
+                                             std::make_tuple(9, std::vector<int>{-10, 1, 9, 14, 20}),
+                                             std::make_tuple(10, std::vector<int>{88, 20, 8, 3, -8}),
+                                             std::make_tuple(11, std::vector<int>{-8, 8, 17, 18, 19}),
+                                             std::make_tuple(12, []() {
+  std::vector<int> vec(1000);
+  for (size_t i = 0; i < vec.size(); ++i) {
+    vec[i] = static_cast<int>(i + 1);
+  }
+  vec[999] = 5000;
+  return vec;
+}())};
+const auto kTestTasksList = std::tuple_cat(
+    ppc::util::AddFuncTask<BadanovAMaxVecElemMPI, InType>(kTestParam, PPC_SETTINGS_badanov_a_max_vec_elem),
+    ppc::util::AddFuncTask<BadanovAMaxVecElemSEQ, InType>(kTestParam, PPC_SETTINGS_badanov_a_max_vec_elem));
 
 const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
 

@@ -15,20 +15,18 @@ BadanovAMaxVecElemSEQ::BadanovAMaxVecElemSEQ(const InType &in) {
 }
 
 bool BadanovAMaxVecElemSEQ::ValidationImpl() {
-  
   return !GetInput().empty();
 }
 
 bool BadanovAMaxVecElemSEQ::PreProcessingImpl() {
-
   return true;
 }
 
 bool BadanovAMaxVecElemSEQ::RunImpl() {
   int max_elem = GetInput()[0];
 
-  for(size_t i = 1; i < GetInput().size(); i++){
-    if(GetInput()[i] > max_elem) {
+  for (size_t i = 1; i < GetInput().size(); i++) {
+    if (GetInput()[i] > max_elem) {
       max_elem = GetInput()[i];
     }
   }
@@ -36,11 +34,9 @@ bool BadanovAMaxVecElemSEQ::RunImpl() {
   GetOutput() = max_elem;
 
   return true;
-
 }
 
 bool BadanovAMaxVecElemSEQ::PostProcessingImpl() {
-
   return true;
 }
 
