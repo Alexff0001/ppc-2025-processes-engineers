@@ -22,9 +22,7 @@ class BadanovAMaxVecElemPerfTests : public ppc::util::BaseRunPerfTests<InType, O
 
     int expected_max = input_data_[0];
     for (size_t i = 1; i < input_data_.size(); ++i) {
-      if (input_data_[i] > expected_max) {
-        expected_max = input_data_[i];
-      }
+      expected_max = std::max(input_data_[i], expected_max);
     }
     return expected_max == output_data;
   }
@@ -34,7 +32,7 @@ class BadanovAMaxVecElemPerfTests : public ppc::util::BaseRunPerfTests<InType, O
   }
 
  private:
-  std::vector<int> generate_test_vector(int size) {
+  static std::vector<int> generate_test_vector(int size) {
     std::vector<int> vec(size);
     for (int i = 0; i < size; ++i) {
       vec[i] = (i * 17 + 13) % 1000;

@@ -26,9 +26,7 @@ bool BadanovAMaxVecElemSEQ::RunImpl() {
   int max_elem = GetInput()[0];
 
   for (size_t i = 1; i < GetInput().size(); i++) {
-    if (GetInput()[i] > max_elem) {
-      max_elem = GetInput()[i];
-    }
+    max_elem = std::max(GetInput()[i], max_elem);
   }
 
   GetOutput() = max_elem;

@@ -39,9 +39,7 @@ class BadanovAMaxVecElemFuncTests : public ppc::util::BaseRunFuncTests<InType, O
 
     int expected_result = test_vector_[0];
     for (size_t i = 1; i < test_vector_.size(); ++i) {
-      if (test_vector_[i] > expected_result) {
-        expected_result = test_vector_[i];
-      }
+      expected_result = std::max(test_vector_[i], expected_result);
     }
     return output_data == expected_result;
   }

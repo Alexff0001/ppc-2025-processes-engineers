@@ -46,8 +46,8 @@ bool BadanovAMaxVecElemMPI::RunImpl() {
   int base_size = total_elem / world_size;
   int remainder = total_elem % world_size;
 
-  int start_i;
-  int end_i;
+  int start_i = 0;
+  int end_i = 0;
 
   if (rank < remainder) {
     start_i = rank * (base_size + 1);
