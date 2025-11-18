@@ -17,7 +17,7 @@ class BadanovAMaxVecElemPerfTests : public ppc::util::BaseRunPerfTests<InType, O
   InType input_data_;
 
   void SetUp() override {
-    input_data_ = generate_test_vector(kCount_);
+    input_data_ = GenerateTestVector(kCount_);
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
