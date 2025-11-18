@@ -1,8 +1,8 @@
 #include "badanov_a_max_vec_elem/seq/include/ops_seq.hpp"
 
-#include <vector>
 #include <algorithm>
-#include <cstddef> 
+#include <cstddef>
+#include <vector>
 
 #include "badanov_a_max_vec_elem/common/include/common.hpp"
 

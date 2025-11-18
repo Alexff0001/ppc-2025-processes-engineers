@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 
-#include <vector>
 #include <algorithm>
-#include <cstddef>
 #include <climits>
+#include <cstddef>
+#include <vector>
 
 #include "badanov_a_max_vec_elem/common/include/common.hpp"
 #include "badanov_a_max_vec_elem/mpi/include/ops_mpi.hpp"

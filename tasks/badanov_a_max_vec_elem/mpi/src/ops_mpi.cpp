@@ -2,9 +2,9 @@
 
 #include <mpi.h>
 
-#include <vector>
-#include <climits>
 #include <algorithm>
+#include <climits>
+#include <vector>
 
 #include "badanov_a_max_vec_elem/common/include/common.hpp"
 
