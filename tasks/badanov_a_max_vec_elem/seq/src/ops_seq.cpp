@@ -1,10 +1,10 @@
 #include "badanov_a_max_vec_elem/seq/include/ops_seq.hpp"
 
-#include <numeric>
 #include <vector>
+#include <algorithm>
+#include <cstddef> 
 
 #include "badanov_a_max_vec_elem/common/include/common.hpp"
-#include "util/include/util.hpp"
 
 namespace badanov_a_max_vec_elem {
 

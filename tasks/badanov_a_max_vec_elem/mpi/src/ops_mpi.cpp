@@ -2,11 +2,11 @@
 
 #include <mpi.h>
 
-#include <numeric>
 #include <vector>
+#include <climits>
+#include <algorithm>
 
 #include "badanov_a_max_vec_elem/common/include/common.hpp"
-#include "util/include/util.hpp"
 
 namespace badanov_a_max_vec_elem {
 
@@ -34,7 +34,7 @@ bool BadanovAMaxVecElemMPI::RunImpl() {
 
   int total_elem = 0;
   if (rank == 0) {
-    total_elem = tmp_vec.size();
+    total_elem = static_cast<int>(tmp_vec.size());
   }
 
   MPI_Bcast(&total_elem, 1, MPI_INT, 0, MPI_COMM_WORLD);
@@ -53,15 +53,13 @@ bool BadanovAMaxVecElemMPI::RunImpl() {
     start_i = rank * (base_size + 1);
     end_i = start_i + (base_size + 1);
   } else {
-    start_i = remainder * (base_size + 1) + (rank - remainder) * base_size;
+    start_i = (remainder * (base_size + 1)) + ((rank - remainder) * base_size);
     end_i = std::min(start_i + base_size, total_elem);
   }
 
   int max_elem_local = INT_MIN;
   for (int i = start_i; i < end_i; i++) {
-    if (tmp_vec[i] > max_elem_local) {
-      max_elem_local = tmp_vec[i];
-    }
+    max_elem_local = std::max(tmp_vec[i], max_elem_local);
   }
 
   int max_elem_global = INT_MIN;

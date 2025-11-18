@@ -4,13 +4,10 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
-#include <cstdint>
-#include <numeric>
-#include <stdexcept>
 #include <string>
 #include <tuple>
-#include <utility>
 #include <vector>
+#include <climits>
 
 #include "badanov_a_max_vec_elem/common/include/common.hpp"
 #include "badanov_a_max_vec_elem/mpi/include/ops_mpi.hpp"

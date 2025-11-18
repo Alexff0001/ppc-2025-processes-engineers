@@ -1,5 +1,10 @@
 #include <gtest/gtest.h>
 
+#include <vector>
+#include <algorithm>
+#include <cstddef>
+#include <climits>
+
 #include "badanov_a_max_vec_elem/common/include/common.hpp"
 #include "badanov_a_max_vec_elem/mpi/include/ops_mpi.hpp"
 #include "badanov_a_max_vec_elem/seq/include/ops_seq.hpp"
@@ -9,7 +14,7 @@ namespace badanov_a_max_vec_elem {
 
 class BadanovAMaxVecElemPerfTests : public ppc::util::BaseRunPerfTests<InType, OutType> {
   const int kCount_ = 100;
-  InType input_data_{};
+  InType input_data_;
 
   void SetUp() override {
     input_data_ = generate_test_vector(kCount_);
@@ -32,7 +37,7 @@ class BadanovAMaxVecElemPerfTests : public ppc::util::BaseRunPerfTests<InType, O
   }
 
  private:
-  static std::vector<int> generate_test_vector(int size) {
+  static std::vector<int> GenerateTestVector(int size) {
     std::vector<int> vec(size);
     for (int i = 0; i < size; ++i) {
       vec[i] = (i * 17 + 13) % 1000;
