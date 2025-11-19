@@ -1,10 +1,8 @@
 #include <gtest/gtest.h>
 
-#include <algorithm>
 #include <climits>
 #include <cstddef>
 #include <random>
-#include <vector>
 
 #include "badanov_a_max_vec_elem/common/include/common.hpp"
 #include "badanov_a_max_vec_elem/mpi/include/ops_mpi.hpp"
