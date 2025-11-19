@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <climits>
 #include <cstddef>
+#include <random>
 #include <vector>
 
 #include "badanov_a_max_vec_elem/common/include/common.hpp"
@@ -13,39 +14,30 @@
 namespace badanov_a_max_vec_elem {
 
 class BadanovAMaxVecElemPerfTests : public ppc::util::BaseRunPerfTests<InType, OutType> {
-  const int kCount_ = 100;
+  const size_t kCount_ = 1000000;
   InType input_data_;
+  OutType expected_val_{};
 
   void SetUp() override {
-    input_data_ = GenerateTestVector(kCount_);
+    std::random_device rand_dev;
+    std::mt19937 gen(rand_dev());
+    std::uniform_int_distribution<int> rand(-777, 777);
+
+    input_data_.resize(kCount_);
+    for (size_t i = 0; i < kCount_; i++) {
+      input_data_[i] = rand(gen);
+    }
+
+    expected_val_ = 1337;
+    input_data_[kCount_ / 2] = expected_val_;
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
-    if (input_data_.empty()) {
-      return output_data == INT_MIN;
-    }
-
-    int expected_max = input_data_[0];
-    for (size_t i = 1; i < input_data_.size(); ++i) {
-      expected_max = std::max(input_data_[i], expected_max);
-    }
-    return expected_max == output_data;
+    return expected_val_ == output_data;
   }
 
   InType GetTestInputData() final {
     return input_data_;
-  }
-
- private:
-  static std::vector<int> GenerateTestVector(int size) {
-    std::vector<int> vec(size);
-    for (int i = 0; i < size; ++i) {
-      vec[i] = (i * 17 + 13) % 1000;
-    }
-    if (!vec.empty()) {
-      vec[size / 2] = 1500;
-    }
-    return vec;
   }
 };
 

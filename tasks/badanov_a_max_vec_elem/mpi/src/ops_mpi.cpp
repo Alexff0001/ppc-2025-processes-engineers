@@ -25,7 +25,7 @@ bool BadanovAMaxVecElemMPI::PreProcessingImpl() {
 }
 
 bool BadanovAMaxVecElemMPI::RunImpl() {
-  std::vector<int> &tmp_vec = GetInput();
+  const auto& tmp_vec = GetInput();
 
   int rank = 0;
   int world_size = 0;

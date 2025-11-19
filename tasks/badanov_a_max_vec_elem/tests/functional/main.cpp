@@ -59,17 +59,17 @@ TEST_P(BadanovAMaxVecElemFuncTests, CoverageTests) {
   ExecuteTest(GetParam());
 }
 
-const std::array<TestType, 12> kTestParam = {std::make_tuple(1, std::vector<int>{1, 2, 5, 3, 4, 7}),
-                                             std::make_tuple(2, std::vector<int>{-1, -2, -5, -3, -4, -7}),
-                                             std::make_tuple(3, std::vector<int>{4, -1, 5, -9, 3, -3}),
-                                             std::make_tuple(4, std::vector<int>{42}),
-                                             std::make_tuple(5, std::vector<int>{7, 7, 7, 7, 7}),
-                                             std::make_tuple(6, std::vector<int>{6, 1, 3, 9, 2, 1}),
-                                             std::make_tuple(7, std::vector<int>{200, 1500, 4000, 7000, 6000}),
-                                             std::make_tuple(8, std::vector<int>{-8, -5, 0, 10, 15, 20}),
-                                             std::make_tuple(9, std::vector<int>{-10, 1, 9, 14, 20}),
-                                             std::make_tuple(10, std::vector<int>{88, 20, 8, 3, -8}),
-                                             std::make_tuple(11, std::vector<int>{-8, 8, 17, 18, 19}),
+const std::array<TestType, 12> kTestParam = {std::make_tuple(1, std::vector<int>{1, 2, 5, 3, 4, 5}),
+                                             std::make_tuple(2, std::vector<int>{-4, -32, -77, -100, -137, -222}),
+                                             std::make_tuple(3, std::vector<int>{231, 5363, 3432, 6785, 2345}),
+                                             std::make_tuple(4, std::vector<int>{228}),
+                                             std::make_tuple(5, std::vector<int>{60, -5, 34, -75, -43, 20}),
+                                             std::make_tuple(6, std::vector<int>{99, 99, 99, 99, 99}),
+                                             std::make_tuple(7, std::vector<int>{67, 34, 32, 0, -23}),
+                                             std::make_tuple(8, std::vector<int>{-56, -7, 45, 56, 304}),
+                                             std::make_tuple(9, std::vector<int>{45, 71, 23, 7, 86, 4}),
+                                             std::make_tuple(10, std::vector<int>{-23, 8, 29, 56, 87}),
+                                             std::make_tuple(11, std::vector<int>{-54, -2, 0, 5, 65, 96}),
                                              std::make_tuple(12, []() {
   std::vector<int> vec(1000);
   for (size_t i = 0; i < vec.size(); ++i) {
