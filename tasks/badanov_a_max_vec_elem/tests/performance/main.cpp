@@ -21,15 +21,15 @@ class BadanovAMaxVecElemPerfTests : public ppc::util::BaseRunPerfTests<InType, O
     std::mt19937 gen(rand_dev());
     std::uniform_int_distribution<int> rand(-1000000, 1000000);
     input_data_.resize(kCount_);
-    
+
     for (size_t i = 0; i < kCount_; i++) {
       input_data_[i] = rand(gen);
     }
-    
+
     size_t middle_index = kCount_ / 2;
     expected_val_ = 2000000;
     input_data_[middle_index] = expected_val_;
-    
+
     input_data_[kCount_ / 4] = expected_val_ - 1;
     input_data_[3 * kCount_ / 4] = expected_val_ - 2;
   }
