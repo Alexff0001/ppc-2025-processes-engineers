@@ -1,6 +1,7 @@
 #include "badanov_a_max_vec_elem/seq/include/ops_seq.hpp"
 
 #include <algorithm>
+#include <climits>
 #include <cstddef>
 #include <vector>
 
