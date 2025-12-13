@@ -11,43 +11,54 @@
 Найти максимальный элемент в целочисленном вектере произвольного размера.
 
 Входные данные: вектор целых чисел vector<int>
-Выходные данные: целое число - максимальный элемент
+Выходные данные: целое число - максимальный элемент или INT_MIN для пустого вектора
 Ограничения: вектор может быть пустым, содержать отрицательные числа, повторяющиеся значения
 
 ## 3. Базовый алгоритм (Последовательный)
 ```cpp
+if (GetInput().empty()) {
+    GetOutput() = INT_MIN;
+    return true;
+}
+
 int max_elem = GetInput()[0];
-
-  for (size_t i = 1; i < GetInput().size(); i++) {
+for (size_t i = 1; i < GetInput().size(); i++) {
     max_elem = std::max(GetInput()[i], max_elem);
-  }
-
-  GetOutput() = max_elem;
+}
+GetOutput() = max_elem;
 ```
 Алгоритм последовательно перебирает все элементы вектора, обновляя значение максимального элемента при нахождении большего значения.
 
 ## 4. Схема распараллеливания
 ### Распределение данных
-Исходный вектор делится на равные части между процессами
-Первые N процессов получают +1 элемент для балансировки нагрузки
-Формула распределения:
+Исходный вектор рассылается на все процессы с использованием MPI_Scatterv. Каждый процесс получает свою часть данных для обработки.
+Алгоритм распределения:
 
 ```cpp
 int base_size = total_elem / world_size;
 int remainder = total_elem % world_size;
+
+std::vector<int> local_sizes(world_size);
+std::vector<int> displacements(world_size);
+
+MPI_Scatterv(root_data, local_sizes.data(), displacements.data(), MPI_INT,
+             local_data.data(), local_size, MPI_INT, 0, MPI_COMM_WORLD);
 ```
 
 ### Коммуникационная схема
 1. Процесс 0 (root):
-- Рассылает размер данных всем процессам (`MPI_Bcast`)
+- Определяет общий размер данных
+- Рассылает размер всем процессам (MPI_Bcast)
+- Рассылает данные всем процессам (MPI_Scatterv)
 - Обрабатывает свою часть данных
 
 2. Процессы 1..N-1:
-- Получают размер данных (`MPI_Bcast`)
+- Получают размер данных (MPI_Bcast)
+- Получают свою часть данных (MPI_Scatterv)
 - Находят локальный максимум
 
 3. Глобальная редукция:
-- Все процессы участвуют в операции `MPI_Allreduce` с `MPI_MAX`
+- Все процессы участвуют в операции MPI_Allreduce с MPI_MAX
 - Находится глобальный максимум
 
 ## 5. Детали реализации
@@ -71,8 +82,15 @@ int remainder = total_elem % world_size;
 - **MPI:** Open MPI v5.0.8
 
 ### Данные для тестирования
-- Размеры тестовых данных
-- Количество тестовых случаев
+Функциональные тесты:
+- 12 тестовых случаев
+- Включают пустые векторы
+- Отрицательные числа
+- Граничные случаи
+
+Производительные тесты:
+- Размер данных: 1,000,000 элементов
+- Диапазон значений: [-77777, 77777]
 
 ## 7. Результаты и обсуждение
 
@@ -86,12 +104,12 @@ int remainder = total_elem % world_size;
 
 ### 7.2 Производительность
 
-| Процессы | Время, мс | Ускорение | Эффективность |
+| Процессы | Время, с | Ускорение | Эффективность |
 |----------|-----------|-----------|---------------|
-| 1 (SEQ)  |    0,13   | 1.00      | N/A           |
-| 2        |    0,21   | 0,62      | 31%           |
-| 4        |    0,41   | 0,32      | 8%            |
-| 8        |    1,39   | 0,09      | 1%            |
+| 1 (SEQ)  |    0,21   | 1.00      | N/A           |
+| 2        |    0,33   | 0,64      | 32%           |
+| 4        |    0,47   | 0,45      | 23%            |
+| 8        |    0,75   | 0,28      | 14%            |
 
 
 ## 8. Выводы
@@ -113,8 +131,6 @@ int remainder = total_elem % world_size;
 
 ```cpp
 bool BadanovAMaxVecElemMPI::RunImpl() {
-  const auto& tmp_vec = GetInput();
-
   int rank = 0;
   int world_size = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -122,36 +138,43 @@ bool BadanovAMaxVecElemMPI::RunImpl() {
 
   int total_elem = 0;
   if (rank == 0) {
-    total_elem = static_cast<int>(tmp_vec.size());
+    total_elem = static_cast<int>(GetInput().size());
   }
 
   MPI_Bcast(&total_elem, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
   if (total_elem == 0) {
+    GetOutput() = INT_MIN;
     return true;
   }
 
   int base_size = total_elem / world_size;
   int remainder = total_elem % world_size;
 
-  int start_i = 0;
-  int end_i = 0;
+  std::vector<int> local_sizes(world_size);
+  std::vector<int> displacements(world_size);
 
-  if (rank < remainder) {
-    start_i = rank * (base_size + 1);
-    end_i = start_i + (base_size + 1);
-  } else {
-    start_i = (remainder * (base_size + 1)) + ((rank - remainder) * base_size);
-    end_i = std::min(start_i + base_size, total_elem);
+  if (rank == 0) {
+    int offset = 0;
+    for (int i = 0; i < world_size; ++i) {
+      local_sizes[i] = base_size + (i < remainder ? 1 : 0);
+      displacements[i] = offset;
+      offset += local_sizes[i];
+    }
   }
 
+  int local_size = base_size + (rank < remainder ? 1 : 0);
+  std::vector<int> local_data(local_size);
+
+  MPI_Scatterv(rank == 0 ? GetInput().data() : nullptr, local_sizes.data(), displacements.data(), MPI_INT,
+               local_data.data(), local_size, MPI_INT, 0, MPI_COMM_WORLD);
+
   int max_elem_local = INT_MIN;
-  for (int i = start_i; i < end_i; i++) {
-    max_elem_local = std::max(tmp_vec[i], max_elem_local);
+  for (int i = 0; i < local_size; ++i) {
+    max_elem_local = std::max(local_data[i], max_elem_local);
   }
 
   int max_elem_global = INT_MIN;
-
   MPI_Allreduce(&max_elem_local, &max_elem_global, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
 
   GetOutput() = max_elem_global;
