@@ -17,6 +17,9 @@ class BadanovATorusTopologyMPI : public BaseTask {
   bool PreProcessingImpl() override;
   bool RunImpl() override;
   bool PostProcessingImpl() override;
+
+  int CalculateRows(int world_size);
+  int GetNeighbor(int rank, int direction, int rows, int cols);
 };
 
 }  // namespace badanov_a_torus_topology
