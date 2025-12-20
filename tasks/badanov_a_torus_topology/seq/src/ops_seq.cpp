@@ -24,7 +24,7 @@ bool BadanovATorusTopologySEQ::PreProcessingImpl() {
   return true;
 }
 
-int IvanovAMeshTorusSEQ::GetNeighbor(int rank, int direction, int rows, int cols) {
+int BadanovATorusTopologySEQ::GetNeighbor(int rank, int direction, int rows, int cols) {
   int row = rank / cols;
   int col = rank % cols;
 
@@ -48,7 +48,7 @@ int IvanovAMeshTorusSEQ::GetNeighbor(int rank, int direction, int rows, int cols
   return row * cols + col;
 }
 
-std::vector<int> IvanovAMeshTorusSEQ::FindRoute(int src, int dst, int rows, int cols) {
+std::vector<int> BadanovATorusTopologySEQ::FindRoute(int src, int dst, int rows, int cols) {
   std::vector<int> route;
 
   if (src == dst) {
