@@ -24,99 +24,102 @@ bool BadanovATorusTopologySEQ::PreProcessingImpl() {
   return true;
 }
 
-std::vector<int> BadanovATorusTopologySEQ::simulateTorusPath(int src, int dst, int total_nodes) {
-  std::vector<int> path;
-  
-  if (src == dst) {
-    path.push_back(src);
-    return path;
+int IvanovAMeshTorusSEQ::GetNeighbor(int rank, int direction, int rows, int cols) {
+  int row = rank / cols;
+  int col = rank % cols;
+
+  switch (direction) {
+    case 0: // вверх
+      row = (row - 1 + rows) % rows;
+      break;
+      
+    case 1: // вниз
+      row = (row + 1) % rows;
+      break;
+      
+    case 2: // влево
+      col = (col - 1 + cols) % cols;
+      break;
+      
+    case 3: // вправо
+      col = (col + 1) % cols;
+      break;
   }
-  
-  // Предполагаем квадратную сетку
-  int grid_size = static_cast<int>(std::sqrt(total_nodes));
-  if (grid_size * grid_size != total_nodes) {
-    grid_size = total_nodes; // fallback
-  }
-  
-  int src_row = src / grid_size;
-  int src_col = src % grid_size;
-  int dst_row = dst / grid_size;
-  int dst_col = dst % grid_size;
-  
-  int current = src;
-  path.push_back(current);
-  
-  while (src_row != dst_row) {
-    int row_diff = dst_row - src_row;
-    
-    if (std::abs(row_diff) <= grid_size / 2) {
-      src_row += (row_diff > 0) ? 1 : -1;
-    } else {
-      src_row -= (row_diff > 0) ? 1 : -1;
-    }
-    
-    src_row = (src_row + grid_size) % grid_size;
-    current = src_row * grid_size + src_col;
-    path.push_back(current);
-  }
-  
-  while (src_col != dst_col) {
-    int col_diff = dst_col - src_col;
-    
-    if (std::abs(col_diff) <= grid_size / 2) {
-      src_col += (col_diff > 0) ? 1 : -1;
-    } else {
-      src_col -= (col_diff > 0) ? 1 : -1;
-    }
-    
-    src_col = (src_col + grid_size) % grid_size;
-    current = src_row * grid_size + src_col;
-    path.push_back(current);
-  }
-  
-  return path;
+  return row * cols + col;
 }
 
-void BadanovATorusTopologySEQ::printPath(const std::vector<int>& path) {
-  std::cout << "SEQ Torus path simulation:" << std::endl;
-  std::cout << "Path length: " << path.size() << " hops" << std::endl;
-  std::cout << "Path: ";
-  for (size_t i = 0; i < path.size(); ++i) {
-    std::cout << path[i];
-    if (i < path.size() - 1) std::cout << " -> ";
+std::vector<int> IvanovAMeshTorusSEQ::FindRoute(int src, int dst, int rows, int cols) {
+  std::vector<int> route;
+
+  if (src == dst) {
+    route.push_back(src);
+    return route;
   }
-  std::cout << std::endl;
+
+  int current = src;
+  route.push_back(current);
+
+  int current_row = current / cols;
+  int current_col = current % cols;
+
+  int target_row = dst / cols;
+  int target_col = dst % cols;
+
+  while (current_row != target_row) {
+    int direction = (target_row > current_row) ? 1 : 0;
+    current = GetNeighbor(current, direction, rows, cols);
+    route.push_back(current);
+    current_row = current / cols;
+  }
+
+  while (current_col != target_col) {
+    int direction = (target_col > current_col) ? 3 : 2;
+    current = GetNeighbor(current, direction, rows, cols);
+    route.push_back(current);
+    current_col = current % cols;
+  }
+  return route;
 }
 
 bool BadanovATorusTopologySEQ::RunImpl() {
-  const auto& input = GetInput();
-  int src = input[0];
-  int dst = input[1];
+  const auto &in = GetInput();
+  int src = std::get<0>(in);
+  int dst = std::get<1>(in);
   
-  int total_nodes = 16;
-  
-  std::vector<int> path = simulateTorusPath(src, dst, total_nodes);
-  
-  printPath(path);
-  
-  GetOutput().push_back(static_cast<int>(path.size()));
-  GetOutput().insert(GetOutput().end(), path.begin(), path.end());
-  
-  if (!path.empty()) {
-    GetOutput().push_back(100);
-    GetOutput().push_back(src);
-    GetOutput().push_back(dst);
+  const std::vector<int> &data = std::get<2>(in);
+  constexpr int network_size = 64;
+
+  constexpr int rows = 8;
+  constexpr int cols = 8;
+
+  int adjusted_src = src % network_size;
+  int adjusted_dst = dst % network_size;
+
+  std::vector<int> route = FindRoute(adjusted_src, adjusted_dst, rows, cols);
+  if (route.empty()) {
+    GetOutput() = data;
+  } else {
+    std::vector<int> result;
+    result.push_back(static_cast<int>(route.size()));
+    result.insert(result.end(), route.begin(), route.end());
+
+    if (!data.empty()) {
+      int data_sum = 0;
+      for (int value : data) {
+        data_sum += value;
+      }
+      result.push_back(data_sum);
+      result.push_back(src);
+      result.push_back(dst);
+    }
+
+    GetOutput() = result;
   }
   
   return true;
 }
 
 bool BadanovATorusTopologySEQ::PostProcessingImpl() {
-  if (!GetOutput().empty()) {
-    for (size_t i = 0; i < GetOutput().size(); ++i) {
-      GetOutput()[i] *= 2;
-    }
-  }
   return true;
 }
 
