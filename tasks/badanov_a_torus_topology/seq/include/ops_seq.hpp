@@ -18,9 +18,9 @@ class BadanovATorusTopologySEQ : public BaseTask {
   bool RunImpl() override;
   bool PostProcessingImpl() override;
 
-  TorusCoords RankToCoords(int rank, int grid_size) const;
-  int CoordsToRank(int x, int y, int grid_size) const;
-  double CalculateTorusDistance(const TorusCoords &src, const TorusCoords &dst, int grid_size) const;
+  static TorusCoords RankToCoords(int rank, int grid_size) const;
+  static int CoordsToRank(int x, int y, int grid_size) const;
+  static double CalculateTorusDistance(const TorusCoords &src, const TorusCoords &dst, int grid_size) const;
 };
 
 }  // namespace badanov_a_torus_topology
