@@ -29,7 +29,7 @@ bool BadanovATorusTopologyMPI::PreProcessingImpl() {
   return true;
 }
 
-TorusCoords BadanovATorusTopologyMPI::RankToCoords(int rank, int rows, int cols) const {
+TorusCoords BadanovATorusTopologyMPI::RankToCoords(int rank, int rows, int cols) {
   (void)rows;
   TorusCoords coords{};
   coords.rank = rank;
@@ -38,13 +38,13 @@ TorusCoords BadanovATorusTopologyMPI::RankToCoords(int rank, int rows, int cols)
   return coords;
 }
 
-int BadanovATorusTopologyMPI::CoordsToRank(int x, int y, int rows, int cols) const {
+int BadanovATorusTopologyMPI::CoordsToRank(int x, int y, int rows, int cols) {
   x = (x % cols + cols) % cols;
   y = (y % rows + rows) % rows;
   return (y * cols) + x;
 }
 
-std::vector<int> BadanovATorusTopologyMPI::GetRoute(int src_rank, int dst_rank, int rows, int cols) const {
+std::vector<int> BadanovATorusTopologyMPI::GetRoute(int src_rank, int dst_rank, int rows, int cols) {
   std::vector<int> route;
 
   if (src_rank == dst_rank) {

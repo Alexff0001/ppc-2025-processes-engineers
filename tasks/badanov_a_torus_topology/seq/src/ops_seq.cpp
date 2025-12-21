@@ -25,7 +25,7 @@ bool BadanovATorusTopologySEQ::PreProcessingImpl() {
   return true;
 }
 
-TorusCoords BadanovATorusTopologySEQ::RankToCoords(int rank, int grid_size) const {
+TorusCoords BadanovATorusTopologySEQ::RankToCoords(int rank, int grid_size) {
   TorusCoords coords{};
   coords.rank = rank;
   coords.x = rank % grid_size;
@@ -33,14 +33,14 @@ TorusCoords BadanovATorusTopologySEQ::RankToCoords(int rank, int grid_size) cons
   return coords;
 }
 
-int BadanovATorusTopologySEQ::CoordsToRank(int x, int y, int grid_size) const {
+int BadanovATorusTopologySEQ::CoordsToRank(int x, int y, int grid_size) {
   x = (x % grid_size + grid_size) % grid_size;
   y = (y % grid_size + grid_size) % grid_size;
   return (y * grid_size) + x;
 }
 
 double BadanovATorusTopologySEQ::CalculateTorusDistance(const TorusCoords &src, const TorusCoords &dst,
-                                                        int grid_size) const {
+                                                        int grid_size) {
   int dx = std::abs(dst.x - src.x);
   int dy = std::abs(dst.y - src.y);
 

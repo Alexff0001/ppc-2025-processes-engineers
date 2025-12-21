@@ -20,9 +20,9 @@ class BadanovATorusTopologyMPI : public BaseTask {
   bool RunImpl() override;
   bool PostProcessingImpl() override;
 
-  static TorusCoords RankToCoords(int rank, int rows, int cols) const;
-  static int CoordsToRank(int x, int y, int rows, int cols) const;
-  static std::vector<int> GetRoute(int src_rank, int dst_rank, int rows, int cols) const;
+  static TorusCoords RankToCoords(int rank, int rows, int cols);
+  static int CoordsToRank(int x, int y, int rows, int cols);
+  static std::vector<int> GetRoute(int src_rank, int dst_rank, int rows, int cols);
 };
 
 }  // namespace badanov_a_torus_topology
