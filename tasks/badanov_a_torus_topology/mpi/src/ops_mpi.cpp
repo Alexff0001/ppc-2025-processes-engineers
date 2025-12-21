@@ -78,12 +78,8 @@ std::vector<int> BadanovATorusTopologyMPI::GetRoute(int src_rank, int dst_rank, 
   int x_step = (dx > 0) ? 1 : -1;
   for (int i = 0; i < std::abs(dx); i++) {
     current_x += x_step;
-    if (current_x < 0) {
-      current_x = cols - 1;
-    }
-    if (current_x >= cols) {
-      current_x = 0;
-    }
+    current_x = (current_x < 0) ? cols - 1 : current_x;
+    current_x = (current_x >= cols) ? 0 : current_x;
 
     route.push_back(CoordsToRank(current_x, current_y, rows, cols));
   }
@@ -91,12 +87,8 @@ std::vector<int> BadanovATorusTopologyMPI::GetRoute(int src_rank, int dst_rank, 
   int y_step = (dy > 0) ? 1 : -1;
   for (int i = 0; i < std::abs(dy); i++) {
     current_y += y_step;
-    if (current_y < 0) {
-      current_y = rows - 1;
-    }
-    if (current_y >= rows) {
-      current_y = 0;
-    }
+    current_y = (current_y < 0) ? cols - 1 : current_y;
+    current_y = (current_y >= cols) ? 0 : current_y;
 
     route.push_back(CoordsToRank(current_x, current_y, rows, cols));
   }
