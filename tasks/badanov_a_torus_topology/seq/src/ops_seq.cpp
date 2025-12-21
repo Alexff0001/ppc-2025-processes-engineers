@@ -1,11 +1,11 @@
 #include "badanov_a_torus_topology/seq/include/ops_seq.hpp"
 
+#include <algorithm>
 #include <cmath>
-#include <numeric>
+#include <cstddef>
 #include <vector>
 
 #include "badanov_a_torus_topology/common/include/common.hpp"
-#include "util/include/util.hpp"
 
 namespace badanov_a_torus_topology {
 
@@ -26,7 +26,7 @@ bool BadanovATorusTopologySEQ::PreProcessingImpl() {
 }
 
 TorusCoords BadanovATorusTopologySEQ::RankToCoords(int rank, int grid_size) const {
-  TorusCoords coords;
+  TorusCoords coords{};
   coords.rank = rank;
   coords.x = rank % grid_size;
   coords.y = rank / grid_size;
@@ -36,7 +36,7 @@ TorusCoords BadanovATorusTopologySEQ::RankToCoords(int rank, int grid_size) cons
 int BadanovATorusTopologySEQ::CoordsToRank(int x, int y, int grid_size) const {
   x = (x % grid_size + grid_size) % grid_size;
   y = (y % grid_size + grid_size) % grid_size;
-  return y * grid_size + x;
+  return (y * grid_size) + x;
 }
 
 double BadanovATorusTopologySEQ::CalculateTorusDistance(const TorusCoords &src, const TorusCoords &dst,
@@ -47,7 +47,7 @@ double BadanovATorusTopologySEQ::CalculateTorusDistance(const TorusCoords &src, 
   dx = std::min(dx, grid_size - dx);
   dy = std::min(dy, grid_size - dy);
 
-  return std::sqrt(static_cast<double>(dx * dx + dy * dy));
+  return std::sqrt(static_cast<double>((dx * dx) + (dy * dy)));
 }
 
 bool BadanovATorusTopologySEQ::RunImpl() {

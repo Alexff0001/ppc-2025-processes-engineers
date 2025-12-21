@@ -3,10 +3,10 @@
 #include <mpi.h>
 
 #include <cmath>
+#include <cstddef>
 #include <vector>
 
 #include "badanov_a_torus_topology/common/include/common.hpp"
-#include "util/include/util.hpp"
 
 namespace badanov_a_torus_topology {
 
@@ -31,7 +31,7 @@ bool BadanovATorusTopologyMPI::PreProcessingImpl() {
 
 TorusCoords BadanovATorusTopologyMPI::RankToCoords(int rank, int rows, int cols) const {
   (void)rows;
-  TorusCoords coords;
+  TorusCoords coords{};
   coords.rank = rank;
   coords.x = rank % cols;
   coords.y = rank / cols;
@@ -41,7 +41,7 @@ TorusCoords BadanovATorusTopologyMPI::RankToCoords(int rank, int rows, int cols)
 int BadanovATorusTopologyMPI::CoordsToRank(int x, int y, int rows, int cols) const {
   x = (x % cols + cols) % cols;
   y = (y % rows + rows) % rows;
-  return y * cols + x;
+  return (y * cols) + x;
 }
 
 std::vector<int> BadanovATorusTopologyMPI::GetRoute(int src_rank, int dst_rank, int rows, int cols) const {

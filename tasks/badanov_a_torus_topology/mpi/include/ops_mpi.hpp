@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "badanov_a_torus_topology/common/include/common.hpp"
 #include "task/include/task.hpp"
 

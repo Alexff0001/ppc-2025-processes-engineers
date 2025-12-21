@@ -1,14 +1,11 @@
 #include <gtest/gtest.h>
 #include <mpi.h>
 
-#include <algorithm>
 #include <array>
 #include <cstddef>
-#include <cstdint>
-#include <numeric>
-#include <random>
 #include <string>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 #include "badanov_a_torus_topology/common/include/common.hpp"
