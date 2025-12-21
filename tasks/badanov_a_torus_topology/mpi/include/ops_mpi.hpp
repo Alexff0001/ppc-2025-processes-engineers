@@ -18,8 +18,9 @@ class BadanovATorusTopologyMPI : public BaseTask {
   bool RunImpl() override;
   bool PostProcessingImpl() override;
 
-  int CalculateRows(int world_size);
-  int GetNeighbor(int rank, int direction, int rows, int cols);
+  TorusCoords RankToCoords(int rank, int rows, int cols) const;
+  int CoordsToRank(int x, int y, int rows, int cols) const;
+  std::vector<int> GetRoute(int src_rank, int dst_rank, int rows, int cols) const;
 };
 
 }  // namespace badanov_a_torus_topology

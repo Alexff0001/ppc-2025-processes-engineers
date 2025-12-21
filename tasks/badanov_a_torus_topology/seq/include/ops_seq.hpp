@@ -18,8 +18,9 @@ class BadanovATorusTopologySEQ : public BaseTask {
   bool RunImpl() override;
   bool PostProcessingImpl() override;
 
-  int GetNeighbor(int rank, int direction, int rows, int cols);
-  std::vector<int> FindRoute(int src, int dst, int rows, int cols);
+  TorusCoords RankToCoords(int rank, int grid_size) const;
+  int CoordsToRank(int x, int y, int grid_size) const;
+  double CalculateTorusDistance(const TorusCoords &src, const TorusCoords &dst, int grid_size) const;
 };
 
 }  // namespace badanov_a_torus_topology

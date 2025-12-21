@@ -1,5 +1,6 @@
 #include "badanov_a_torus_topology/seq/include/ops_seq.hpp"
 
+#include <cmath>
 #include <numeric>
 #include <vector>
 
@@ -15,7 +16,7 @@ BadanovATorusTopologySEQ::BadanovATorusTopologySEQ(const InType &in) {
 }
 
 bool BadanovATorusTopologySEQ::ValidationImpl() {
-  const auto& input = GetInput();
+  const auto &in = GetInput();
   return !std::get<2>(in).empty();
 }
 
@@ -24,98 +25,56 @@ bool BadanovATorusTopologySEQ::PreProcessingImpl() {
   return true;
 }
 
-int BadanovATorusTopologySEQ::GetNeighbor(int rank, int direction, int rows, int cols) {
-  int row = rank / cols;
-  int col = rank % cols;
-
-  switch (direction) {
-    case 0: // вверх
-      row = (row - 1 + rows) % rows;
-      break;
-      
-    case 1: // вниз
-      row = (row + 1) % rows;
-      break;
-      
-    case 2: // влево
-      col = (col - 1 + cols) % cols;
-      break;
-      
-    case 3: // вправо
-      col = (col + 1) % cols;
-      break;
-  }
-  return row * cols + col;
+TorusCoords BadanovATorusTopologySEQ::RankToCoords(int rank, int grid_size) const {
+  TorusCoords coords;
+  coords.rank = rank;
+  coords.x = rank % grid_size;
+  coords.y = rank / grid_size;
+  return coords;
 }
 
-std::vector<int> BadanovATorusTopologySEQ::FindRoute(int src, int dst, int rows, int cols) {
-  std::vector<int> route;
+int BadanovATorusTopologySEQ::CoordsToRank(int x, int y, int grid_size) const {
+  x = (x % grid_size + grid_size) % grid_size;
+  y = (y % grid_size + grid_size) % grid_size;
+  return y * grid_size + x;
+}
 
-  if (src == dst) {
-    route.push_back(src);
-    return route;
-  }
+double BadanovATorusTopologySEQ::CalculateTorusDistance(const TorusCoords &src, const TorusCoords &dst,
+                                                        int grid_size) const {
+  int dx = std::abs(dst.x - src.x);
+  int dy = std::abs(dst.y - src.y);
 
-  int current = src;
-  route.push_back(current);
+  dx = std::min(dx, grid_size - dx);
+  dy = std::min(dy, grid_size - dy);
 
-  int current_row = current / cols;
-  int current_col = current % cols;
-
-  int target_row = dst / cols;
-  int target_col = dst % cols;
-
-  while (current_row != target_row) {
-    int direction = (target_row > current_row) ? 1 : 0;
-    current = GetNeighbor(current, direction, rows, cols);
-    route.push_back(current);
-    current_row = current / cols;
-  }
-
-  while (current_col != target_col) {
-    int direction = (target_col > current_col) ? 3 : 2;
-    current = GetNeighbor(current, direction, rows, cols);
-    route.push_back(current);
-    current_col = current % cols;
-  }
-  return route;
+  return std::sqrt(static_cast<double>(dx * dx + dy * dy));
 }
 
 bool BadanovATorusTopologySEQ::RunImpl() {
   const auto &in = GetInput();
-  int src = std::get<0>(in);
-  int dst = std::get<1>(in);
-  
-  const std::vector<int> &data = std::get<2>(in);
-  constexpr int network_size = 64;
+  const size_t src = std::get<0>(in);
+  const size_t dst = std::get<1>(in);
+  const auto &data = std::get<2>(in);
 
-  constexpr int rows = 8;
-  constexpr int cols = 8;
+  const int grid_size = 10;
+  const int virtual_size = grid_size * grid_size;
 
-  int adjusted_src = src % network_size;
-  int adjusted_dst = dst % network_size;
+  int src_rank = static_cast<int>(src) % virtual_size;
+  int dst_rank = static_cast<int>(dst) % virtual_size;
 
-  std::vector<int> route = FindRoute(adjusted_src, adjusted_dst, rows, cols);
-  if (route.empty()) {
-    GetOutput() = data;
-  } else {
-    std::vector<int> result;
-    result.push_back(static_cast<int>(route.size()));
-    result.insert(result.end(), route.begin(), route.end());
+  TorusCoords src_coords = RankToCoords(src_rank, grid_size);
+  TorusCoords dst_coords = RankToCoords(dst_rank, grid_size);
 
-    if (!data.empty()) {
-      int data_sum = 0;
-      for (int value : data) {
-        data_sum += value;
-      }
-      result.push_back(data_sum);
-      result.push_back(src);
-      result.push_back(dst);
-    }
+  double distance = CalculateTorusDistance(src_coords, dst_coords, grid_size);
 
-    GetOutput() = result;
+  std::vector<double> result = data;
+
+  double scale = 1.0 / (1.0 + distance);
+  for (auto &val : result) {
+    val *= scale;
   }
-  
+
+  GetOutput() = result;
   return true;
 }
 

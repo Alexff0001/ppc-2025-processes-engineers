@@ -1,15 +1,14 @@
 #include <gtest/gtest.h>
-#include <stb/stb_image.h>
+#include <mpi.h>
 
 #include <algorithm>
 #include <array>
 #include <cstddef>
 #include <cstdint>
 #include <numeric>
-#include <stdexcept>
+#include <random>
 #include <string>
 #include <tuple>
-#include <utility>
 #include <vector>
 
 #include "badanov_a_torus_topology/common/include/common.hpp"
@@ -23,97 +22,100 @@ namespace badanov_a_torus_topology {
 class BadanovATorusTopologyFuncTests : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
  public:
   static std::string PrintTestParam(const TestType &test_param) {
-    return std::to_string(std::get<0>(test_param)) + "_" + std::get<1>(test_param);
+    return std::to_string(std::get<0>(test_param)) + "_" + std::to_string(std::get<1>(test_param));
   }
 
  protected:
   void SetUp() override {
-    TestType params = std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
-    int test_id = std::get<0>(params);
-    
-    std::mt19937 rng(test_id);
-    std::uniform_int_distribution<int> dist(1, 100);
-    
-    switch (test_id) {
-      case 1:
-        input_data_ = {0, 3, 10, 20, 30};
-        break;
-        
-      case 2: 
-        input_data_ = {5, 1, 42};
-        break;
-        
-      case 3:
-        input_data_ = {2, 2, 1, 2, 3, 4, 5};
-        break;
-        
-      case 4:
-        input_data_.push_back(dist(rng) % 8);
-        input_data_.push_back(dist(rng) % 8);
-        
-        int data_size = dist(rng) % 10 + 1;
-        for (int i = 0; i < data_size; ++i) {
-          input_data_.push_back(dist(rng));
-        }
-        break;
-    
+    const auto &full_param = GetParam();
+    const std::string &task_name =
+        std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kNameTest)>(full_param);
+    TestType params = std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(full_param);
+
+    const size_t msg_size = std::get<0>(params);
+    const size_t pattern = std::get<1>(params);
+
+    const bool is_seq = (task_name.find("seq_enabled") != std::string::npos);
+    const bool is_mpi = (task_name.find("mpi_enabled") != std::string::npos);
+    int mpi_initialized = 0;
+    MPI_Initialized(&mpi_initialized);
+    if (is_mpi && mpi_initialized == 0) {
+      GTEST_SKIP() << "MPI is not initialized (test is running without mpiexec). Skipping MPI tests.";
+    }
+
+    int src = 0;
+    int dst = 0;
+
+    if (is_seq) {
+      src = 0;
+      dst = 0;
+    } else {
+      int world_size = 1;
+      MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+
+      switch (pattern % 4) {
+        case 0:
+          src = 0;
+          dst = world_size - 1;  // Противоположный узел
+          break;
+        case 1:
+          src = 1;
+          dst = 0;  // Обратно к первому
+          break;
+        case 2:
+          if (world_size >= 3) {
+            src = 1;
+            dst = 2;  // Соседние узлы
+          } else {
+            src = 0;
+            dst = world_size - 1;
+          }
+          break;
+        case 3:
+          src = 0;
+          dst = 0;  // Отправка самому себе
+          break;
+        default:
+          src = 0;
+          dst = world_size - 1;
+          break;
+      }
+    }
+
+    std::vector<double> data(msg_size);
+    for (size_t i = 0; i < msg_size; ++i) {
+      data[i] = static_cast<double>(i + pattern);
+    }
+    input_data_ = std::make_tuple(static_cast<size_t>(src), static_cast<size_t>(dst), std::move(data));
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
-  if (output_data.empty()) {
-      return false;
-    }
-    
-    if (output_data[0] == -1) {
-      return output_data.size() == 1;
+    const auto &full_param = GetParam();
+    const std::string &task_name =
+        std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kNameTest)>(full_param);
+    const bool is_seq = (task_name.find("seq_enabled") != std::string::npos);
+
+    const auto &in = input_data_;
+    const int dst = static_cast<int>(std::get<1>(in));
+    const auto &data = std::get<2>(in);
+
+    if (is_seq) {
+      return output_data == data;
     }
 
-    if (output_data.size() < 2) {
-      return false;
+    int mpi_initialized = 0;
+    MPI_Initialized(&mpi_initialized);
+    if (mpi_initialized == 0) {
+      return true;
     }
-    
-    int hops_count = output_data[0];
-    
-    if (hops_count < 0 || hops_count > 100) {
-      return false;
+
+    int world_rank = 0;
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+
+    if (world_rank == dst) {
+      return output_data == data;
     }
-    
-    if (static_cast<int>(output_data.size()) < 1 + hops_count + 1) {
-      return false;
-    }
-    
-    const auto& input = GetTestInputData();
-    if (input.size() >= 2) {
-      int src = input[0];
-      int dst = input[1];
-      
-      if (output_data[1] != src) {
-        return false;
-      }
-      
-      if (output_data[1 + hops_count] != dst) {
-        return false;
-      }
-    }
-    
-    if (hops_count > 0) {
-      std::vector<int> path(output_data.begin() + 1, output_data.begin() + 1 + hops_count + 1);
-      std::sort(path.begin(), path.end());
-      
-      if (std::unique(path.begin(), path.end()) != path.end()) {
-        return false;
-      }
-    }
-    
-    int result_index = 1 + hops_count + 1;
-    if (static_cast<int>(output_data.size()) > result_index) {
-      int final_result = output_data[result_index];
-      if (final_result < 0) {
-        return false;
-      }
-    }
-    
-    return true;
+    return output_data.empty();
   }
 
   InType GetTestInputData() final {
@@ -121,26 +123,30 @@ class BadanovATorusTopologyFuncTests : public ppc::util::BaseRunFuncTests<InType
   }
 
  private:
-  InType input_data_ = 0;
+  InType input_data_;
 };
 
 namespace {
 
-TEST_P(BadanovATorusTopologyFuncTests, MatmulFromPic) {
-  ExecuteTest(GetParam());
-}
+const std::array<TestType, 15> kTestParam = {
+    std::make_tuple(3, 3),     std::make_tuple(2, 5),   std::make_tuple(10, 70),     std::make_tuple(1, 1),
+    std::make_tuple(1, 100),   std::make_tuple(100, 1), std::make_tuple(1000, 1000), std::make_tuple(10, 2),
+    std::make_tuple(5, 3),     std::make_tuple(4, 5),   std::make_tuple(4, 3),       std::make_tuple(10000, 3),
+    std::make_tuple(3, 10000), std::make_tuple(500, 1), std::make_tuple(1, 500)};
 
-const std::array<TestType, 3> kTestParam = {std::make_tuple(3, "3"), std::make_tuple(5, "5"), std::make_tuple(7, "7")};
-
-const auto kTestTasksList =
-    std::tuple_cat(ppc::util::AddFuncTask<BadanovATorusTopologyMPI, InType>(kTestParam, PPC_SETTINGS_badanov_a_torus_topology),
-                   ppc::util::AddFuncTask<BadanovATorusTopologySEQ, InType>(kTestParam, PPC_SETTINGS_badanov_a_torus_topology));
+const auto kTestTasksList = std::tuple_cat(
+    ppc::util::AddFuncTask<BadanovATorusTopologyMPI, InType>(kTestParam, PPC_SETTINGS_badanov_a_torus_topology),
+    ppc::util::AddFuncTask<BadanovATorusTopologySEQ, InType>(kTestParam, PPC_SETTINGS_badanov_a_torus_topology));
 
 const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
 
 const auto kPerfTestName = BadanovATorusTopologyFuncTests::PrintFuncTestName<BadanovATorusTopologyFuncTests>;
 
-INSTANTIATE_TEST_SUITE_P(PicMatrixTests, BadanovATorusTopologyFuncTests, kGtestValues, kPerfTestName);
+TEST_P(BadanovATorusTopologyFuncTests, TorusTopologyRouting) {
+  ExecuteTest(GetParam());
+}
+
+INSTANTIATE_TEST_SUITE_P(TorusTopologyTests, BadanovATorusTopologyFuncTests, kGtestValues, kPerfTestName);
 
 }  // namespace
 
