@@ -44,6 +44,15 @@ int BadanovATorusTopologyMPI::CoordsToRank(int x, int y, int rows, int cols) {
   return (y * cols) + x;
 }
 
+int CalculateStepDelta(int delta, int dimension_size) {
+  if (delta > dimension_size / 2) {
+    delta -= dimension_size;
+  } else if (delta < -dimension_size / 2) {
+    delta += dimension_size;
+  }
+  return delta;
+}
+
 std::vector<int> BadanovATorusTopologyMPI::GetRoute(int src_rank, int dst_rank, int rows, int cols) {
   std::vector<int> route;
 
@@ -55,20 +64,8 @@ std::vector<int> BadanovATorusTopologyMPI::GetRoute(int src_rank, int dst_rank, 
   TorusCoords src_coords = RankToCoords(src_rank, rows, cols);
   TorusCoords dst_coords = RankToCoords(dst_rank, rows, cols);
 
-  int dx = dst_coords.x - src_coords.x;
-  int dy = dst_coords.y - src_coords.y;
-
-  if (dx > cols / 2) {
-    dx -= cols;
-  } else if (dx < -cols / 2) {
-    dx += cols;
-  }
-
-  if (dy > rows / 2) {
-    dy -= rows;
-  } else if (dy < -rows / 2) {
-    dy += rows;
-  }
+  int dx = CalculateStepDelta(dst_coords.x - src_coords.x, cols);
+  int dy = CalculateStepDelta(dst_coords.y - src_coords.y, rows);
 
   int current_x = src_coords.x;
   int current_y = src_coords.y;
