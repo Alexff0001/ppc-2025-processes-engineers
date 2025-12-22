@@ -23,7 +23,7 @@ class BadanovATorusTopologyMPI : public BaseTask {
   static TorusCoords RankToCoords(int rank, int rows, int cols);
   static int CoordsToRank(int x, int y, int rows, int cols);
   static std::vector<int> GetRoute(int src_rank, int dst_rank, int rows, int cols);
-  static int CalculateStepDelta(int delta, int dimension_size)
+  static int CalculateStepDelta(int delta, int dimension_size);
 };
 
 }  // namespace badanov_a_torus_topology
