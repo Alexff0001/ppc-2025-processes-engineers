@@ -18,8 +18,8 @@ class BadanovASparseMatrixMultDoubleCcsSEQ : public BaseTask {
   bool RunImpl() override;
   bool PostProcessingImpl() override;
 
-  static SparseMatrix multiplyCCS(const SparseMatrix &A, const SparseMatrix &B);
-  static double dotProduct(const std::vector<double> &colA, const std::vector<double> &colB);
+  static SparseMatrix MultiplyCCS(const SparseMatrix &a, const SparseMatrix &b);
+  static double DotProduct(const std::vector<double> &col_a, const std::vector<double> &col_b);
 };
 
 }  // namespace badanov_a_sparse_matrix_mult_double_ccs

@@ -23,15 +23,15 @@ class BadanovASparseMatrixMultDoubleCcsMPI : public BaseTask {
   struct LocalData {
     SparseMatrix A_local;
     SparseMatrix B_local;
-    int global_rows;
-    int global_inner_dim;
-    int global_cols;
+    int global_rows{};
+    int global_inner_dim{};
+    int global_cols{};
   };
 
-  LocalData distributeDataHorizontal(int world_rank, int world_size, const SparseMatrix &A, const SparseMatrix &B);
-  SparseMatrix multiplyLocal(const LocalData &local);
-  void gatherResults(int world_rank, int world_size, const SparseMatrix &local_C, SparseMatrix &global_C);
-  static std::vector<double> sparseDotProduct(const SparseMatrix &A, const SparseMatrix &B, int colB);
+  static LocalData DistributeDataHorizontal(int world_rank, int world_size, const SparseMatrix &a, const SparseMatrix &a);
+  static SparseMatrix MultiplyLocal(const LocalData &local);
+  static void GatherResults(int world_rank, int world_size, const SparseMatrix &local_c, SparseMatrix &global_c);
+  static std::vector<double> SparseDotProduct(const SparseMatrix &a, const SparseMatrix &b, int col_b);
 };
 
 }  // namespace badanov_a_sparse_matrix_mult_double_ccs

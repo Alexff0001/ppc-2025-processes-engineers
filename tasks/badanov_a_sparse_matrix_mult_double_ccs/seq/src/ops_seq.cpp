@@ -1,6 +1,5 @@
 #include "badanov_a_sparse_matrix_mult_double_ccs/seq/include/ops_seq.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <vector>
@@ -18,44 +17,44 @@ BadanovASparseMatrixMultDoubleCcsSEQ::BadanovASparseMatrixMultDoubleCcsSEQ(const
 bool BadanovASparseMatrixMultDoubleCcsSEQ::ValidationImpl() {
   const auto &in = GetInput();
 
-  const auto &valuesA = std::get<0>(in);
-  const auto &row_indicesA = std::get<1>(in);
-  const auto &col_pointersA = std::get<2>(in);
-  const auto &valuesB = std::get<3>(in);
-  const auto &row_indicesB = std::get<4>(in);
-  const auto &col_pointersB = std::get<5>(in);
-  int rowsA = std::get<6>(in);
-  int colsA = std::get<7>(in);
-  int colsB = std::get<8>(in);
+  const auto &values_a = std::get<0>(in);
+  const auto &row_indices_a = std::get<1>(in);
+  const auto &col_pointers_a = std::get<2>(in);
+  const auto &value_b = std::get<3>(in);
+  const auto &row_indices_b = std::get<4>(in);
+  const auto &col_pointers_b = std::get<5>(in);
+  int rows_a = std::get<6>(in);
+  int cols_a = std::get<7>(in);
+  int cols_b = std::get<8>(in);
 
-  if (rowsA <= 0 || colsA <= 0) {
+  if (rows_a <= 0 || cols_a <= 0) {
     return false;
   }
-  if (valuesA.size() != row_indicesA.size()) {
+  if (values_a.size() != row_indices_a.size()) {
     return false;
   }
-  if (col_pointersA.size() != static_cast<size_t>(colsA + 1)) {
-    return false;
-  }
-
-  if (colsB <= 0) {
-    return false;
-  }
-  if (valuesB.size() != row_indicesB.size()) {
-    return false;
-  }
-  if (col_pointersB.size() != static_cast<size_t>(colsB + 1)) {
+  if (col_pointers_a.size() != static_cast<size_t>(cols_a + 1)) {
     return false;
   }
 
-  for (size_t i = 0; i < row_indicesB.size(); ++i) {
-    if (row_indicesB[i] < 0 || row_indicesB[i] >= colsA) {
+  if (cols_b <= 0) {
+    return false;
+  }
+  if (value_b.size() != row_indices_b.size()) {
+    return false;
+  }
+  if (col_pointers_b.size() != static_cast<size_t>(cols_b + 1)) {
+    return false;
+  }
+
+  for (size_t i = 0; i < row_indices_b.size(); ++i) {
+    if (row_indices_b[i] < 0 || row_indices_b[i] >= cols_a) {
       return false;
     }
   }
 
-  for (size_t i = 0; i < row_indicesA.size(); ++i) {
-    if (row_indicesA[i] < 0 || row_indicesA[i] >= rowsA) {
+  for (size_t i = 0; i < row_indices_a.size(); ++i) {
+    if (row_indices_a[i] < 0 || row_indices_a[i] >= rows_a) {
       return false;
     }
   }
@@ -68,87 +67,87 @@ bool BadanovASparseMatrixMultDoubleCcsSEQ::PreProcessingImpl() {
   return true;
 }
 
-double BadanovASparseMatrixMultDoubleCcsSEQ::dotProduct(const std::vector<double> &colA,
-                                                        const std::vector<double> &colB) {
+double BadanovASparseMatrixMultDoubleCcsSEQ::dotProduct(const std::vector<double> &col_a,
+                                                        const std::vector<double> &col_b) {
   double result = 0.0;
-  for (size_t i = 0; i < colA.size(); ++i) {
-    result += colA[i] * colB[i];
+  for (size_t i = 0; i < col_a.size(); ++i) {
+    result += col_a[i] * col_b[i];
   }
   return result;
 }
 
-SparseMatrix BadanovASparseMatrixMultDoubleCcsSEQ::multiplyCCS(const SparseMatrix &A, const SparseMatrix &B) {
-  std::vector<double> valuesC;
-  std::vector<int> row_indicesC;
-  std::vector<int> col_pointersC(B.cols + 1, 0);
+SparseMatrix BadanovASparseMatrixMultDoubleCcsSEQ::multiplyCCS(const SparseMatrix &a, const SparseMatrix &b) {
+  std::vector<double> value_c;
+  std::vector<int> row_indices_c;
+  std::vector<int> col_pointers_c(b.cols + 1, 0);
 
-  std::vector<std::vector<double>> columnsA(A.cols);
-  for (int j = 0; j < A.cols; ++j) {
-    columnsA[j] = A.getColumn(j);
+  std::vector<std::vector<double>> columns_a(a.cols);
+  for (int j = 0; j < a.cols; ++j) {
+    columns_a[j] = a.getColumn(j);
   }
 
-  for (int j = 0; j < B.cols; ++j) {
-    std::vector<double> colB = B.getColumn(j);
+  for (int j = 0; j < b.cols; ++j) {
+    std::vector<double> col_b = b.getColumn(j);
 
-    for (int i = 0; i < A.rows; ++i) {
+    for (int i = 0; i < a.rows; ++i) {
       double sum = 0.0;
 
-      for (int k = 0; k < A.cols; ++k) {
-        sum += columnsA[k][i] * colB[k];
+      for (int k = 0; k < a.cols; ++k) {
+        sum += columns_a[k][i] * col_b[k];
       }
 
       if (std::abs(sum) > 1e-10) {
-        valuesC.push_back(sum);
-        row_indicesC.push_back(i);
-        col_pointersC[j + 1]++;
+        value_c.push_back(sum);
+        row_indices_c.push_back(i);
+        col_pointers_c[j + 1]++;
       }
     }
   }
 
-  for (int j = 0; j < B.cols; ++j) {
-    col_pointersC[j + 1] += col_pointersC[j];
+  for (int j = 0; j < b.cols; ++j) {
+    col_pointers_c[j + 1] += col_pointers_c[j];
   }
 
-  SparseMatrix C;
-  C.values = valuesC;
-  C.row_indices = row_indicesC;
-  C.col_pointers = col_pointersC;
-  C.rows = A.rows;
-  C.cols = B.cols;
+  SparseMatrix c;
+  c.values = value_c;
+  c.row_indices = row_indices_c;
+  c.col_pointers = col_pointers_c;
+  c.rows = a.rows;
+  c.cols = b.cols;
 
-  return C;
+  return c;
 }
 
 bool BadanovASparseMatrixMultDoubleCcsSEQ::RunImpl() {
   const auto &in = GetInput();
 
-  const auto &valuesA = std::get<0>(in);
-  const auto &row_indicesA = std::get<1>(in);
-  const auto &col_pointersA = std::get<2>(in);
-  const auto &valuesB = std::get<3>(in);
-  const auto &row_indicesB = std::get<4>(in);
-  const auto &col_pointersB = std::get<5>(in);
-  int rowsA = std::get<6>(in);
-  int colsA = std::get<7>(in);
-  int colsB = std::get<8>(in);
+  const auto &values_a = std::get<0>(in);
+  const auto &row_indices_a = std::get<1>(in);
+  const auto &col_pointers_a = std::get<2>(in);
+  const auto &value_b = std::get<3>(in);
+  const auto &row_indices_b = std::get<4>(in);
+  const auto &col_pointers_b = std::get<5>(in);
+  int rows_a = std::get<6>(in);
+  int cols_a = std::get<7>(in);
+  int cols_b = std::get<8>(in);
 
-  SparseMatrix A;
-  A.values = valuesA;
-  A.row_indices = row_indicesA;
-  A.col_pointers = col_pointersA;
-  A.rows = rowsA;
-  A.cols = colsA;
+  SparseMatrix a;
+  a.values = values_a;
+  a.row_indices = row_indices_a;
+  a.col_pointers = col_pointers_a;
+  a.rows = rows_a;
+  a.cols = cols_a;
 
-  SparseMatrix B;
-  B.values = valuesB;
-  B.row_indices = row_indicesB;
-  B.col_pointers = col_pointersB;
-  B.rows = colsA;
-  B.cols = colsB;
+  SparseMatrix b;
+  b.values = value_b;
+  b.row_indices = row_indices_b;
+  b.col_pointers = col_pointers_b;
+  b.rows = cols_a;
+  b.cols = cols_b;
 
-  SparseMatrix C = multiplyCCS(A, B);
+  SparseMatrix c = multiplyCCS(a, b);
 
-  GetOutput() = std::make_tuple(C.values, C.row_indices, C.col_pointers);
+  GetOutput() = std::make_tuple(c.values, c.row_indices, c.col_pointers);
 
   return true;
 }

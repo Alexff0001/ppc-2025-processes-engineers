@@ -2,13 +2,11 @@
 #include <mpi.h>
 #include <stb/stb_image.h>
 
-#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <random>
 #include <string>
 #include <tuple>
-#include <utility>
 #include <vector>
 
 #include "badanov_a_sparse_matrix_mult_double_ccs/common/include/common.hpp"
@@ -49,41 +47,41 @@ class BadanovASparseMatrixMultDoubleCcsFuncTests : public ppc::util::BaseRunFunc
     std::uniform_real_distribution<double> value_dist(0.0, 10.0);
     std::bernoulli_distribution sparse_dist(0.05);
 
-    std::vector<double> valuesA;
-    std::vector<int> row_indicesA;
-    std::vector<int> col_pointersA(inner_dim + 1, 0);
+    std::vector<double> values_a;
+    std::vector<int> row_indices_a;
+    std::vector<int> col_pointers_a(inner_dim + 1, 0);
 
-    int nnzA = 0;
+    int nnz_a = 0;
     for (size_t col = 0; col < inner_dim; ++col) {
-      col_pointersA[col] = nnzA;
+      col_pointers_a[col] = nnz_a;
       for (size_t row = 0; row < rows; ++row) {
         if (sparse_dist(gen)) {
-          valuesA.push_back(value_dist(gen));
-          row_indicesA.push_back(row);
-          nnzA++;
+          values_a.push_back(value_dist(gen));
+          row_indices_a.push_back(row);
+          nnz_a++;
         }
       }
     }
-    col_pointersA[inner_dim] = nnzA;
+    col_pointers_a[inner_dim] = nnz_a;
 
-    std::vector<double> valuesB;
-    std::vector<int> row_indicesB;
-    std::vector<int> col_pointersB(cols + 1, 0);
+    std::vector<double> value_b;
+    std::vector<int> row_indices_b;
+    std::vector<int> col_pointers_b(cols + 1, 0);
 
-    int nnzB = 0;
+    int nnz_b = 0;
     for (size_t col = 0; col < cols; ++col) {
-      col_pointersB[col] = nnzB;
+      col_pointers_b[col] = nnz_b;
       for (size_t row = 0; row < inner_dim; ++row) {
         if (sparse_dist(gen)) {
-          valuesB.push_back(value_dist(gen));
-          row_indicesB.push_back(row);
-          nnzB++;
+          value_b.push_back(value_dist(gen));
+          row_indices_b.push_back(row);
+          nnz_b++;
         }
       }
     }
-    col_pointersB[cols] = nnzB;
+    col_pointers_b[cols] = nnz_b;
 
-    input_data_ = std::make_tuple(valuesA, row_indicesA, col_pointersA, valuesB, row_indicesB, col_pointersB, rows,
+    input_data_ = std::make_tuple(values_a, row_indices_a, col_pointers_a, value_b, row_indices_b, col_pointers_b, rows,
                                   inner_dim, cols);
   }
 
@@ -92,19 +90,19 @@ class BadanovASparseMatrixMultDoubleCcsFuncTests : public ppc::util::BaseRunFunc
     int rows = std::get<6>(in);
     int cols = std::get<8>(in);
 
-    const auto &valuesC = std::get<0>(output_data);
-    const auto &row_indicesC = std::get<1>(output_data);
-    const auto &col_pointersC = std::get<2>(output_data);
+    const auto &value_c = std::get<0>(output_data);
+    const auto &row_indices_c = std::get<1>(output_data);
+    const auto &col_pointers_c = std::get<2>(output_data);
 
-    if (col_pointersC.size() != static_cast<size_t>(cols + 1)) {
+    if (col_pointers_c.size() != static_cast<size_t>(cols + 1)) {
       return false;
     }
-    if (valuesC.size() != row_indicesC.size()) {
+    if (value_c.size() != row_indices_c.size()) {
       return false;
     }
 
-    for (size_t i = 0; i < row_indicesC.size(); ++i) {
-      if (row_indicesC[i] < 0 || row_indicesC[i] >= rows) {
+    for (size_t i = 0; i < row_indices_c.size(); ++i) {
+      if (row_indices_c[i] < 0 || row_indices_c[i] >= rows) {
         return false;
       }
     }
