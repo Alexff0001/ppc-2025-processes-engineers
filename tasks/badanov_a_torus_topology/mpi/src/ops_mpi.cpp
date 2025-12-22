@@ -117,43 +117,33 @@ bool BadanovATorusTopologyMPI::RunImpl() {
     return true;
   }
 
-  if (world_size <= 1) {
-    if (world_rank == dst_rank) {
-      out = data;
-    }
+  if (world_size <= 1 || src_rank < 0 || dst_rank < 0 || 
+      src_rank >= world_size || dst_rank >= world_size) {
     return true;
   }
 
   int rows = 1;
   int cols = world_size;
-
+  
   if (world_size > 1) {
-    int rows = static_cast<int>(std::sqrt(world_size));
+    rows = static_cast<int>(std::sqrt(world_size));
     while (rows > 0 && world_size % rows != 0) {
       rows--;
     }
     cols = world_size / rows;
-
-    if (rows == 0) {
-      rows = 1;
-      cols = world_size;
-    }
   }
 
   std::vector<int> route = GetRoute(src_rank, dst_rank, rows, cols);
-
-  bool is_in_route = false;
+  
   int position_in_route = -1;
-
-  for (size_t i = 0; i < route.size(); i++) {
+  for (size_t i = 0; i < route.size(); ++i) {
     if (world_rank == route[i]) {
-      is_in_route = true;
       position_in_route = static_cast<int>(i);
       break;
     }
   }
 
-  if (!is_in_route) {
+  if (position_in_route < 0) {
     return true;
   }
 
