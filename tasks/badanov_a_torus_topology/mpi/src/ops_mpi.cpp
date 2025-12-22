@@ -44,7 +44,7 @@ int BadanovATorusTopologyMPI::CoordsToRank(int x, int y, int rows, int cols) {
   return (y * cols) + x;
 }
 
-int CalculateStepDelta(int delta, int dimension_size) {
+static int CalculateStepDelta(int delta, int dimension_size) {
   if (delta > dimension_size / 2) {
     delta -= dimension_size;
   } else if (delta < -dimension_size / 2) {
