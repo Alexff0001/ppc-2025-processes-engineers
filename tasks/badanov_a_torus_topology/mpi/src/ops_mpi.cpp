@@ -93,6 +93,27 @@ std::vector<int> BadanovATorusTopologyMPI::GetRoute(int src_rank, int dst_rank, 
   return route;
 }
 
+void BadanovATorusTopologyMPI::HandleDataRouting(int position_in_route, const std::vector<int> &route,
+                                                 const std::vector<double> &data, std::vector<double> &out) {
+  if (position_in_route == 0) {
+    if (route.size() > 1) {
+      int next_hop = route[1];
+      MPI_Send(data.data(), static_cast<int>(data.size()), MPI_DOUBLE, next_hop, 0, MPI_COMM_WORLD);
+    }
+  } else if (position_in_route == static_cast<int>(route.size()) - 1) {
+    out.resize(data.size());
+    MPI_Recv(out.data(), static_cast<int>(out.size()), MPI_DOUBLE, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD,
+             MPI_STATUS_IGNORE);
+  } else {
+    std::vector<double> buffer(data.size());
+    MPI_Recv(buffer.data(), static_cast<int>(buffer.size()), MPI_DOUBLE, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD,
+             MPI_STATUS_IGNORE);
+
+    int next_hop = route[position_in_route + 1];
+    MPI_Send(buffer.data(), static_cast<int>(buffer.size()), MPI_DOUBLE, next_hop, 0, MPI_COMM_WORLD);
+  }
+}
+
 bool BadanovATorusTopologyMPI::RunImpl() {
   int world_rank = 0;
   int world_size = 0;
@@ -151,23 +172,7 @@ bool BadanovATorusTopologyMPI::RunImpl() {
     return true;
   }
 
-  if (position_in_route == 0) {
-    if (route.size() > 1) {
-      int next_hop = route[1];
-      MPI_Send(data.data(), static_cast<int>(data.size()), MPI_DOUBLE, next_hop, 0, MPI_COMM_WORLD);
-    }
-  } else if (position_in_route == static_cast<int>(route.size()) - 1) {
-    out.resize(data.size());
-    MPI_Recv(out.data(), static_cast<int>(out.size()), MPI_DOUBLE, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD,
-             MPI_STATUS_IGNORE);
-  } else {
-    std::vector<double> buffer(data.size());
-    MPI_Recv(buffer.data(), static_cast<int>(buffer.size()), MPI_DOUBLE, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD,
-             MPI_STATUS_IGNORE);
-
-    int next_hop = route[position_in_route + 1];
-    MPI_Send(buffer.data(), static_cast<int>(buffer.size()), MPI_DOUBLE, next_hop, 0, MPI_COMM_WORLD);
-  }
+  HandleDataRouting(position_in_route, route, data, out);
 
   return true;
 }
