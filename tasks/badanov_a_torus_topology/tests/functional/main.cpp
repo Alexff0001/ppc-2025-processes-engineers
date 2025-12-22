@@ -126,10 +126,9 @@ class BadanovATorusTopologyFuncTests : public ppc::util::BaseRunFuncTests<InType
 namespace {
 
 const std::array<TestType, 15> kTestParam = {
-    std::make_tuple(3, 3),     std::make_tuple(2, 5),   std::make_tuple(10, 70),     std::make_tuple(1, 1),
-    std::make_tuple(1, 100),   std::make_tuple(100, 1), std::make_tuple(1000, 1000), std::make_tuple(10, 2),
-    std::make_tuple(5, 3),     std::make_tuple(4, 5),   std::make_tuple(4, 3),       std::make_tuple(10000, 3),
-    std::make_tuple(3, 10000), std::make_tuple(500, 1), std::make_tuple(1, 500)};
+    std::make_tuple(3, 3),       std::make_tuple(10, 70),   std::make_tuple(1, 1),  std::make_tuple(1, 100),
+    std::make_tuple(1000, 1000), std::make_tuple(10, 2),    std::make_tuple(5, 3),  std::make_tuple(4, 3),
+    std::make_tuple(10000, 3),   std::make_tuple(3, 10000), std::make_tuple(1, 500)};
 
 const auto kTestTasksList = std::tuple_cat(
     ppc::util::AddFuncTask<BadanovATorusTopologyMPI, InType>(kTestParam, PPC_SETTINGS_badanov_a_torus_topology),

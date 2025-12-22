@@ -44,15 +44,6 @@ int BadanovATorusTopologyMPI::CoordsToRank(int x, int y, int rows, int cols) {
   return (y * cols) + x;
 }
 
-int BadanovATorusTopologyMPI::CalculateStepDelta(int delta, int dimension_size) {
-  if (delta > dimension_size / 2) {
-    delta -= dimension_size;
-  } else if (delta < -dimension_size / 2) {
-    delta += dimension_size;
-  }
-  return delta;
-}
-
 std::vector<int> BadanovATorusTopologyMPI::GetRoute(int src_rank, int dst_rank, int rows, int cols) {
   std::vector<int> route;
 
@@ -64,29 +55,45 @@ std::vector<int> BadanovATorusTopologyMPI::GetRoute(int src_rank, int dst_rank, 
   TorusCoords src_coords = RankToCoords(src_rank, rows, cols);
   TorusCoords dst_coords = RankToCoords(dst_rank, rows, cols);
 
-  int dx = CalculateStepDelta(dst_coords.x - src_coords.x, cols);
-  int dy = CalculateStepDelta(dst_coords.y - src_coords.y, rows);
+  int dx = dst_coords.x - src_coords.x;
+  int dy = dst_coords.y - src_coords.y;
+
+  if (dx > cols / 2) {
+    dx -= cols;
+  } else if (dx < -cols / 2) {
+    dx += cols;
+  }
+
+  if (dy > rows / 2) {
+    dy -= rows;
+  } else if (dy < -rows / 2) {
+    dy += rows;
+  }
 
   int current_x = src_coords.x;
   int current_y = src_coords.y;
 
   route.push_back(src_rank);
 
-  int x_step = (dx > 0) ? 1 : -1;
-  for (int i = 0; i < std::abs(dx); i++) {
-    current_x += x_step;
-    current_x = (current_x < 0) ? cols - 1 : current_x;
-    current_x = (current_x >= cols) ? 0 : current_x;
-
+  while (dx != 0) {
+    if (dx > 0) {
+      current_x = (current_x + 1) % cols;
+      dx--;
+    } else {
+      current_x = (current_x - 1 + cols) % cols;
+      dx++;
+    }
     route.push_back(CoordsToRank(current_x, current_y, rows, cols));
   }
 
-  int y_step = (dy > 0) ? 1 : -1;
-  for (int i = 0; i < std::abs(dy); i++) {
-    current_y += y_step;
-    current_y = (current_y < 0) ? rows - 1 : current_y;
-    current_y = (current_y >= rows) ? 0 : current_y;
-
+  while (dy != 0) {
+    if (dy > 0) {
+      current_y = (current_y + 1) % rows;
+      dy--;
+    } else {
+      current_y = (current_y - 1 + rows) % rows;
+      dy++;
+    }
     route.push_back(CoordsToRank(current_x, current_y, rows, cols));
   }
 
