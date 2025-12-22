@@ -117,24 +117,28 @@ bool BadanovATorusTopologyMPI::RunImpl() {
     return true;
   }
 
-  if (world_size <= 1 || src_rank < 0 || dst_rank < 0 || 
-      src_rank >= world_size || dst_rank >= world_size) {
+  if (world_size == 1) {
     return true;
   }
 
-  int rows = 1;
-  int cols = world_size;
-  
-  if (world_size > 1) {
-    rows = static_cast<int>(std::sqrt(world_size));
-    while (rows > 0 && world_size % rows != 0) {
-      rows--;
+  if (world_size == 2) {
+    if (world_rank == src_rank) {
+      MPI_Send(data.data(), static_cast<int>(data.size()), MPI_DOUBLE, dst_rank, 0, MPI_COMM_WORLD);
+    } else if (world_rank == dst_rank) {
+      out.resize(data.size());
+      MPI_Recv(out.data(), static_cast<int>(out.size()), MPI_DOUBLE, src_rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
-    cols = world_size / rows;
+    return true;
   }
 
+  int rows = static_cast<int>(std::sqrt(world_size));
+  while (rows > 0 && world_size % rows != 0) {
+    rows--;
+  }
+  int cols = world_size / rows;
+
   std::vector<int> route = GetRoute(src_rank, dst_rank, rows, cols);
-  
+
   int position_in_route = -1;
   for (size_t i = 0; i < route.size(); ++i) {
     if (world_rank == route[i]) {
@@ -147,24 +151,22 @@ bool BadanovATorusTopologyMPI::RunImpl() {
     return true;
   }
 
-  const int tag_data = 0;
-
   if (position_in_route == 0) {
     if (route.size() > 1) {
       int next_hop = route[1];
-      MPI_Send(data.data(), static_cast<int>(data.size()), MPI_DOUBLE, next_hop, tag_data, MPI_COMM_WORLD);
+      MPI_Send(data.data(), static_cast<int>(data.size()), MPI_DOUBLE, next_hop, 0, MPI_COMM_WORLD);
     }
   } else if (position_in_route == static_cast<int>(route.size()) - 1) {
     out.resize(data.size());
-    MPI_Recv(out.data(), static_cast<int>(out.size()), MPI_DOUBLE, MPI_ANY_SOURCE, tag_data, MPI_COMM_WORLD,
+    MPI_Recv(out.data(), static_cast<int>(out.size()), MPI_DOUBLE, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD,
              MPI_STATUS_IGNORE);
   } else {
     std::vector<double> buffer(data.size());
-    MPI_Recv(buffer.data(), static_cast<int>(buffer.size()), MPI_DOUBLE, MPI_ANY_SOURCE, tag_data, MPI_COMM_WORLD,
+    MPI_Recv(buffer.data(), static_cast<int>(buffer.size()), MPI_DOUBLE, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD,
              MPI_STATUS_IGNORE);
 
     int next_hop = route[position_in_route + 1];
-    MPI_Send(buffer.data(), static_cast<int>(buffer.size()), MPI_DOUBLE, next_hop, tag_data, MPI_COMM_WORLD);
+    MPI_Send(buffer.data(), static_cast<int>(buffer.size()), MPI_DOUBLE, next_hop, 0, MPI_COMM_WORLD);
   }
 
   return true;
