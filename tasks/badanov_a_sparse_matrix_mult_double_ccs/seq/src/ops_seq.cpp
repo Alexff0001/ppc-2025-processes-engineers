@@ -74,7 +74,7 @@ double BadanovASparseMatrixMultDoubleCcsSEQ::DotProduct(const std::vector<double
   return result;
 }
 
-static std::vector<double> ExtractColumn(const SparseMatrix &matrix, int j) {
+std::vector<double> ExtractColumn(const SparseMatrix &matrix, int j) {
   std::vector<double> col(matrix.rows, 0.0);
   for (int idx = matrix.col_pointers[j]; idx < matrix.col_pointers[j + 1]; ++idx) {
     col[matrix.row_indices[idx]] = matrix.values[idx];
