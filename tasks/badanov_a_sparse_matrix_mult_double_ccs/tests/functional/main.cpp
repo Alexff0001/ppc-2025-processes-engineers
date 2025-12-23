@@ -2,6 +2,7 @@
 #include <mpi.h>
 #include <stb/stb_image.h>
 
+#include <array>
 #include <cmath>
 #include <cstddef>
 #include <random>
@@ -43,7 +44,8 @@ class BadanovASparseMatrixMultDoubleCcsFuncTests : public ppc::util::BaseRunFunc
       GTEST_SKIP() << "MPI is not initialized (test is running without mpiexec). Skipping MPI tests.";
     }
 
-    std::mt19937 gen(42);
+    std::random_device rd;
+    std::mt19937 gen(rd());
     std::uniform_real_distribution<double> value_dist(0.0, 10.0);
     std::bernoulli_distribution sparse_dist(0.05);
 
@@ -57,7 +59,7 @@ class BadanovASparseMatrixMultDoubleCcsFuncTests : public ppc::util::BaseRunFunc
       for (size_t row = 0; row < rows; ++row) {
         if (sparse_dist(gen)) {
           values_a.push_back(value_dist(gen));
-          row_indices_a.push_back(row);
+          row_indices_a.push_back(static_cast<int>(row));
           nnz_a++;
         }
       }
@@ -74,7 +76,7 @@ class BadanovASparseMatrixMultDoubleCcsFuncTests : public ppc::util::BaseRunFunc
       for (size_t row = 0; row < inner_dim; ++row) {
         if (sparse_dist(gen)) {
           value_b.push_back(value_dist(gen));
-          row_indices_b.push_back(row);
+          row_indices_b.push_back(static_cast<int>(row));
           nnz_b++;
         }
       }
@@ -94,7 +96,7 @@ class BadanovASparseMatrixMultDoubleCcsFuncTests : public ppc::util::BaseRunFunc
     const auto &row_indices_c = std::get<1>(output_data);
     const auto &col_pointers_c = std::get<2>(output_data);
 
-    if (col_pointers_c.size() != static_cast<size_t>(cols + 1)) {
+    if (col_pointers_c.size() != static_cast<size_t>(cols) + 1) {
       return false;
     }
     if (value_c.size() != row_indices_c.size()) {

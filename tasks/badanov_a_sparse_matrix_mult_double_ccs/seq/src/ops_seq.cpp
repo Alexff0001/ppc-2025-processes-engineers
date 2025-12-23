@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <cstddef>
+#include <tuple>
 #include <vector>
 
 #include "badanov_a_sparse_matrix_mult_double_ccs/common/include/common.hpp"
@@ -33,7 +34,7 @@ bool BadanovASparseMatrixMultDoubleCcsSEQ::ValidationImpl() {
   if (values_a.size() != row_indices_a.size()) {
     return false;
   }
-  if (col_pointers_a.size() != static_cast<size_t>(cols_a + 1)) {
+  if (col_pointers_a.size() != static_cast<size_t>(cols_a) + 1) {
     return false;
   }
 
@@ -43,18 +44,18 @@ bool BadanovASparseMatrixMultDoubleCcsSEQ::ValidationImpl() {
   if (value_b.size() != row_indices_b.size()) {
     return false;
   }
-  if (col_pointers_b.size() != static_cast<size_t>(cols_b + 1)) {
+  if (col_pointers_b.size() != static_cast<size_t>(cols_b) + 1) {
     return false;
   }
 
-  for (size_t i = 0; i < row_indices_b.size(); ++i) {
-    if (row_indices_b[i] < 0 || row_indices_b[i] >= cols_a) {
+  for (const auto &row_idx : row_indices_b) {
+    if (row_idx < 0 || row_idx >= cols_a) {
       return false;
     }
   }
 
-  for (size_t i = 0; i < row_indices_a.size(); ++i) {
-    if (row_indices_a[i] < 0 || row_indices_a[i] >= rows_a) {
+  for (const auto &row_idx : row_indices_a) {
+    if (row_idx < 0 || row_idx >= rows_a) {
       return false;
     }
   }

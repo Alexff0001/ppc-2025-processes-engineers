@@ -1,19 +1,18 @@
 #include <gtest/gtest.h>
 #include <mpi.h>
 
-#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <random>
 #include <string>
 #include <tuple>
-#include <utility>
 #include <vector>
 
 #include "badanov_a_sparse_matrix_mult_double_ccs/common/include/common.hpp"
 #include "badanov_a_sparse_matrix_mult_double_ccs/mpi/include/ops_mpi.hpp"
 #include "badanov_a_sparse_matrix_mult_double_ccs/seq/include/ops_seq.hpp"
 #include "util/include/perf_test_util.hpp"
+#include "util/include/util.hpp"
 
 namespace badanov_a_sparse_matrix_mult_double_ccs {
 
@@ -92,7 +91,7 @@ class BadanovASparseMatrixMultDoubleCcsPerfTests : public ppc::util::BaseRunPerf
 
     const auto &col_pointers_c = std::get<2>(output_data);
 
-    return col_pointers_c.size() == static_cast<size_t>(cols + 1);
+    return col_pointers_c.size() == static_cast<size_t>(cols) + 1;
   }
 
   InType GetTestInputData() final {

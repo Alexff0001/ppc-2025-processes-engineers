@@ -2,7 +2,9 @@
 
 #include <mpi.h>
 
+#include <cmath>
 #include <cstddef>
+#include <tuple>
 #include <vector>
 
 #include "badanov_a_sparse_matrix_mult_double_ccs/common/include/common.hpp"
