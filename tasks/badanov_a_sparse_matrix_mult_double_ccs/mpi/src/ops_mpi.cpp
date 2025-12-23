@@ -105,7 +105,7 @@ BadanovASparseMatrixMultDoubleCcsMPI::LocalData BadanovASparseMatrixMultDoubleCc
   }
 
   for (int col = 0; col < a.cols; ++col) {
-    local_a_col_pointers[col + 1] = local_a_col_pointers[col] + temp_values[col].size();
+    local_a_col_pointers[col + 1] = local_a_col_pointers[col] + static_cast<int>(temp_values[col].size());
 
     for (size_t i = 0; i < temp_values[col].size(); ++i) {
       local_a_values.push_back(temp_values[col][i]);
