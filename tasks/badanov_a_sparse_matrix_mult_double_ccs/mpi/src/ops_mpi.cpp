@@ -64,17 +64,17 @@ BadanovASparseMatrixMultDoubleCcsMPI::LocalData BadanovASparseMatrixMultDoubleCc
   local.global_inner_dim = a.cols;
   local.global_cols = b.cols;
 
-  int base_rows_per_proc = a.rows / world_size;
-  int remainder = a.rows % world_size;
+  int rows_per_proc = a.rows / world_size;
+  int extra_rows = a.rows % world_size;
 
-  int local_rows = base_rows_per_proc + (world_rank < remainder ? 1 : 0);
-  int local_start_row = 0;
-
-  for (int i = 0; i < world_rank; ++i) {
-    local_start_row += base_rows_per_proc + (i < remainder ? 1 : 0);
+  int local_start_row = world_rank * rows_per_proc;
+  if (world_rank < extra_rows) {
+    local_start_row += world_rank;
+  } else {
+    local_start_row += extra_rows;
   }
 
-  int local_end_row = local_start_row + local_rows;
+  int local_rows = rows_per_proc + (world_rank < extra_rows ? 1 : 0);
 
   if (local_rows == 0) {
     local.a_local.rows = 0;
@@ -87,44 +87,29 @@ BadanovASparseMatrixMultDoubleCcsMPI::LocalData BadanovASparseMatrixMultDoubleCc
   std::vector<double> local_a_values;
   std::vector<int> local_a_row_indices;
   std::vector<int> local_a_col_pointers(a.cols + 1, 0);
+  int local_end_row = local_start_row + local_rows;
+
+  std::vector<std::vector<double>> temp_values(a.cols);
+  std::vector<std::vector<int>> temp_indices(a.cols);
 
   for (int col = 0; col < a.cols; ++col) {
-    int col_start = a.col_pointers[col];
-    int col_end = a.col_pointers[col + 1];
-
-    for (int idx = col_start; idx < col_end; ++idx) {
+    for (int idx = a.col_pointers[col]; idx < a.col_pointers[col + 1]; ++idx) {
       int row = a.row_indices[idx];
-      bool in_range = (row >= local_start_row && row < local_end_row);
-      if (in_range) {
-        local_a_col_pointers[col + 1]++;
+      double val = a.values[idx];
+
+      if (row >= local_start_row && row < local_end_row) {
+        temp_values[col].push_back(val);
+        temp_indices[col].push_back(row - local_start_row);
       }
     }
   }
 
   for (int col = 0; col < a.cols; ++col) {
-    local_a_col_pointers[col + 1] += local_a_col_pointers[col];
-  }
+    local_a_col_pointers[col + 1] = local_a_col_pointers[col] + temp_values[col].size();
 
-  int local_nnz = local_a_col_pointers[a.cols];
-  local_a_values.resize(local_nnz);
-  local_a_row_indices.resize(local_nnz);
-
-  std::vector<int> current_pos(a.cols, 0);
-  for (int col = 0; col < a.cols; ++col) {
-    int col_start = a.col_pointers[col];
-    int col_end = a.col_pointers[col + 1];
-
-    for (int idx = col_start; idx < col_end; ++idx) {
-      int global_row = a.row_indices[idx];
-      bool in_range = (global_row >= local_start_row && global_row < local_end_row);
-
-      if (in_range) {
-        int local_row = global_row - local_start_row;
-        int pos = local_a_col_pointers[col] + current_pos[col];
-        local_a_values[pos] = a.values[idx];
-        local_a_row_indices[pos] = local_row;
-        current_pos[col]++;
-      }
+    for (size_t i = 0; i < temp_values[col].size(); ++i) {
+      local_a_values.push_back(temp_values[col][i]);
+      local_a_row_indices.push_back(temp_indices[col][i]);
     }
   }
 
