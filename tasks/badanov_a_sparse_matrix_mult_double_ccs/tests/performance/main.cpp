@@ -40,7 +40,8 @@ class BadanovASparseMatrixMultDoubleCcsPerfTests : public ppc::util::BaseRunPerf
     int inner_dim = matrix_size;
     int cols = matrix_size;
 
-    std::mt19937 gen(12345);
+    std::random_device rd;
+    std::mt19937 gen(rd());
     std::uniform_real_distribution<double> value_dist(0.0, 10.0);
     std::bernoulli_distribution sparse_dist(0.01);  // 1% non-zero
 
