@@ -1,6 +1,6 @@
 #include "badanov_a_sparse_matrix_mult_double_ccs/seq/include/ops_seq.hpp"
 
-#include <algorithm> 
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <tuple>
@@ -49,15 +49,11 @@ bool BadanovASparseMatrixMultDoubleCcsSEQ::ValidationImpl() {
     return false;
   }
 
-  if (!std::ranges::all_of(row_indices_b, [cols_a](int row_idx) {
-        return row_idx >= 0 && row_idx < cols_a;
-      })) {
+  if (!std::ranges::all_of(row_indices_b, [cols_a](int row_idx) { return row_idx >= 0 && row_idx < cols_a; })) {
     return false;
   }
 
-  if (!std::ranges::all_of(row_indices_a, [rows_a](int row_idx) {
-        return row_idx >= 0 && row_idx < rows_a;
-      })) {
+  if (!std::ranges::all_of(row_indices_a, [rows_a](int row_idx) { return row_idx >= 0 && row_idx < rows_a; })) {
     return false;
   }
 
