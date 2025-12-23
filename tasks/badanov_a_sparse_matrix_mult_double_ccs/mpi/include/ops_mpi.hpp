@@ -21,14 +21,15 @@ class BadanovASparseMatrixMultDoubleCcsMPI : public BaseTask {
   bool PostProcessingImpl() override;
 
   struct LocalData {
-    SparseMatrix A_local;
-    SparseMatrix B_local;
+    SparseMatrix a_local;
+    SparseMatrix b_local;
     int global_rows{};
     int global_inner_dim{};
     int global_cols{};
   };
 
-  static LocalData DistributeDataHorizontal(int world_rank, int world_size, const SparseMatrix &a, const SparseMatrix &a);
+  static LocalData DistributeDataHorizontal(int world_rank, int world_size, const SparseMatrix &a,
+                                            const SparseMatrix &b);
   static SparseMatrix MultiplyLocal(const LocalData &local);
   static void GatherResults(int world_rank, int world_size, const SparseMatrix &local_c, SparseMatrix &global_c);
   static std::vector<double> SparseDotProduct(const SparseMatrix &a, const SparseMatrix &b, int col_b);

@@ -92,7 +92,7 @@ class BadanovASparseMatrixMultDoubleCcsPerfTests : public ppc::util::BaseRunPerf
 
     const auto &col_pointers_c = std::get<2>(output_data);
 
-    return col_pointersC.size() == static_cast<size_t>(cols + 1);
+    return col_pointers_c.size() == static_cast<size_t>(cols + 1);
   }
 
   InType GetTestInputData() final {

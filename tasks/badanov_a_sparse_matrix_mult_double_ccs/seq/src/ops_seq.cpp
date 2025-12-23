@@ -67,7 +67,7 @@ bool BadanovASparseMatrixMultDoubleCcsSEQ::PreProcessingImpl() {
   return true;
 }
 
-double BadanovASparseMatrixMultDoubleCcsSEQ::dotProduct(const std::vector<double> &col_a,
+double BadanovASparseMatrixMultDoubleCcsSEQ::DotProduct(const std::vector<double> &col_a,
                                                         const std::vector<double> &col_b) {
   double result = 0.0;
   for (size_t i = 0; i < col_a.size(); ++i) {
@@ -76,18 +76,18 @@ double BadanovASparseMatrixMultDoubleCcsSEQ::dotProduct(const std::vector<double
   return result;
 }
 
-SparseMatrix BadanovASparseMatrixMultDoubleCcsSEQ::multiplyCCS(const SparseMatrix &a, const SparseMatrix &b) {
+SparseMatrix BadanovASparseMatrixMultDoubleCcsSEQ::MultiplyCCS(const SparseMatrix &a, const SparseMatrix &b) {
   std::vector<double> value_c;
   std::vector<int> row_indices_c;
   std::vector<int> col_pointers_c(b.cols + 1, 0);
 
   std::vector<std::vector<double>> columns_a(a.cols);
   for (int j = 0; j < a.cols; ++j) {
-    columns_a[j] = a.getColumn(j);
+    columns_a[j] = a.GetColumn(j);
   }
 
   for (int j = 0; j < b.cols; ++j) {
-    std::vector<double> col_b = b.getColumn(j);
+    std::vector<double> col_b = b.GetColumn(j);
 
     for (int i = 0; i < a.rows; ++i) {
       double sum = 0.0;
@@ -145,7 +145,7 @@ bool BadanovASparseMatrixMultDoubleCcsSEQ::RunImpl() {
   b.rows = cols_a;
   b.cols = cols_b;
 
-  SparseMatrix c = multiplyCCS(a, b);
+  SparseMatrix c = MultiplyCCS(a, b);
 
   GetOutput() = std::make_tuple(c.values, c.row_indices, c.col_pointers);
 

@@ -58,7 +58,7 @@ bool BadanovASparseMatrixMultDoubleCcsMPI::PreProcessingImpl() {
   return true;
 }
 
-BadanovASparseMatrixMultDoubleCcsMPI::LocalData BadanovASparseMatrixMultDoubleCcsMPI::distributeDataHorizontal(
+BadanovASparseMatrixMultDoubleCcsMPI::LocalData BadanovASparseMatrixMultDoubleCcsMPI::DistributeDataHorizontal(
     int world_rank, int world_size, const SparseMatrix &a, const SparseMatrix &b) {
   LocalData local;
   local.global_rows = a.rows;
@@ -117,7 +117,7 @@ BadanovASparseMatrixMultDoubleCcsMPI::LocalData BadanovASparseMatrixMultDoubleCc
   return local;
 }
 
-std::vector<double> BadanovASparseMatrixMultDoubleCcsMPI::sparseDotProduct(const SparseMatrix &a, const SparseMatrix &b,
+std::vector<double> BadanovASparseMatrixMultDoubleCcsMPI::SparseDotProduct(const SparseMatrix &a, const SparseMatrix &b,
                                                                            int col_b) {
   std::vector<double> result(a.rows, 0.0);
 
@@ -135,13 +135,13 @@ std::vector<double> BadanovASparseMatrixMultDoubleCcsMPI::sparseDotProduct(const
   return result;
 }
 
-SparseMatrix BadanovASparseMatrixMultDoubleCcsMPI::multiplyLocal(const LocalData &local) {
+SparseMatrix BadanovASparseMatrixMultDoubleCcsMPI::MultiplyLocal(const LocalData &local) {
   std::vector<double> values_c;
   std::vector<int> row_indices_c;
   std::vector<int> col_pointers_c(local.global_cols + 1, 0);
 
   for (int col_b = 0; col_b < local.global_cols; ++col_b) {
-    std::vector<double> local_col = sparseDotProduct(local.a_local, local.a_local, col_b);
+    std::vector<double> local_col = SparseDotProduct(local.a_local, local.a_local, col_b);
 
     for (int row = 0; row < local.a_local.rows; ++row) {
       if (std::abs(local_col[row]) > 1e-10) {
@@ -166,7 +166,7 @@ SparseMatrix BadanovASparseMatrixMultDoubleCcsMPI::multiplyLocal(const LocalData
   return c_local;
 }
 
-void BadanovASparseMatrixMultDoubleCcsMPI::gatherResults(int world_rank, int world_size, const SparseMatrix &local_c,
+void BadanovASparseMatrixMultDoubleCcsMPI::GatherResults(int world_rank, int world_size, const SparseMatrix &local_c,
                                                          SparseMatrix &global_c) {
   std::vector<int> local_nnz_per_col(local_c.cols, 0);
   for (int col = 0; col < local_c.cols; ++col) {
@@ -261,18 +261,18 @@ bool BadanovASparseMatrixMultDoubleCcsMPI::RunImpl() {
   a_global.cols = cols_a;
 
   SparseMatrix b_global;
-  b_global.values = value_b;
+  b_global.values = values_b;
   b_global.row_indices = row_indices_b;
   b_global.col_pointers = col_pointers_b;
   b_global.rows = cols_a;
   b_global.cols = cols_b;
 
-  LocalData local_data = distributeDataHorizontal(world_rank, world_size, a_global, b_global);
+  LocalData local_data = DistributeDataHorizontal(world_rank, world_size, a_global, b_global);
 
-  SparseMatrix local_c = multiplyLocal(local_data);
+  SparseMatrix local_c = MultiplyLocal(local_data);
 
   SparseMatrix global_c;
-  gatherResults(world_rank, world_size, local_c, global_c);
+  GatherResults(world_rank, world_size, local_c, global_c);
 
   GetOutput() = std::make_tuple(global_c.values, global_c.row_indices, global_c.col_pointers);
 
