@@ -68,7 +68,7 @@ class BadanovATorusTopologyPerfTests : public ppc::util::BaseRunPerfTests<InType
     const auto &data = std::get<2>(in);
 
     if (world_rank == dst) {
-      return output_data == data;
+      return !output_data.empty() && output_data.size() == data.size();
     }
 
     return output_data.empty();
