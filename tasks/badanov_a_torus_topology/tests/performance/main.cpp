@@ -94,6 +94,6 @@ const auto kGtestValues = ppc::util::TupleToGTestValues(kAllPerfTasks);
 
 const auto kPerfTestName = BadanovATorusTopologyPerfTests::CustomPerfTestName;
 
-INSTANTIATE_TEST_SUITE_P(RunModeTests, BadanovATorusTopologyPerfTests, kGtestValues, kPerfTestName);
+INSTANTIATE_TEST_SUITE_P(TorusTopologyPerfTests, BadanovATorusTopologyPerfTests, kGtestValues, kPerfTestName);
 
 }  // namespace badanov_a_torus_topology

@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <mpi.h>
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <string>
@@ -53,11 +54,11 @@ class BadanovATorusTopologyFuncTests : public ppc::util::BaseRunFuncTests<InType
       switch (pattern % 4) {
         case 0:
           src = 0;
-          dst = world_size - 1;  // Противоположный узел
+          dst = std::max(0, world_size - 1);
           break;
         case 1:
-          src = 1;
-          dst = 0;  // Обратно к первому
+          src = std::min(1, world_size - 1);
+          dst = 0;
           break;
         case 2:
           if (world_size >= 3) {
@@ -74,9 +75,11 @@ class BadanovATorusTopologyFuncTests : public ppc::util::BaseRunFuncTests<InType
           break;
         default:
           src = 0;
-          dst = world_size - 1;
+          dst = std::max(0, world_size - 1);
           break;
       }
+      src = std::clamp(src, 0, world_size - 1);
+      dst = std::clamp(dst, 0, world_size - 1);
     }
 
     std::vector<double> data(msg_size);
@@ -125,7 +128,7 @@ class BadanovATorusTopologyFuncTests : public ppc::util::BaseRunFuncTests<InType
 
 namespace {
 
-const std::array<TestType, 15> kTestParam = {
+const std::array<TestType, 11> kTestParam = {
     std::make_tuple(3, 3),       std::make_tuple(10, 70),   std::make_tuple(1, 1),  std::make_tuple(1, 100),
     std::make_tuple(1000, 1000), std::make_tuple(10, 2),    std::make_tuple(5, 3),  std::make_tuple(4, 3),
     std::make_tuple(10000, 3),   std::make_tuple(3, 10000), std::make_tuple(1, 500)};
@@ -142,7 +145,7 @@ TEST_P(BadanovATorusTopologyFuncTests, TorusTopologyRouting) {
   ExecuteTest(GetParam());
 }
 
-INSTANTIATE_TEST_SUITE_P(TorusTopologyTests, BadanovATorusTopologyFuncTests, kGtestValues, kPerfTestName);
+INSTANTIATE_TEST_SUITE_P(TorusTopologyFuncTests, BadanovATorusTopologyFuncTests, kGtestValues, kPerfTestName);
 
 }  // namespace
 
