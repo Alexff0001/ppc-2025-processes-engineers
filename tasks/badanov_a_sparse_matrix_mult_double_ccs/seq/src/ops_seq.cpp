@@ -89,11 +89,18 @@ SparseMatrix BadanovASparseMatrixMultDoubleCcsSEQ::MultiplyCCS(const SparseMatri
 
   std::vector<std::vector<double>> columns_a(a.cols);
   for (int j = 0; j < a.cols; ++j) {
-    columns_a[j] = ExtractColumn(a, j);
+    std::vector<double> col_a(a.rows, 0.0);
+    for (int idx = a.col_pointers[j]; idx < a.col_pointers[j + 1]; ++idx) {
+      col_a[a.row_indices[idx]] = a.values[idx];
+    }
+    columns_a[j] = std::move(col_a);
   }
 
   for (int j = 0; j < b.cols; ++j) {
-    std::vector<double> col_b = ExtractColumn(b, j);
+    std::vector<double> col_b(a.cols, 0.0);  // Размер = cols_a = rows_b
+    for (int idx = b.col_pointers[j]; idx < b.col_pointers[j + 1]; ++idx) {
+      col_b[b.row_indices[idx]] = b.values[idx];
+    }
 
     for (int i = 0; i < a.rows; ++i) {
       double sum = 0.0;
