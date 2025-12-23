@@ -124,8 +124,7 @@ namespace {
 
 const std::array<TestType, 15> kTestParam = {
     std::make_tuple(10, 10, 10),    std::make_tuple(50, 50, 50),      std::make_tuple(100, 100, 100),
-    std::make_tuple(200, 200, 200), std::make_tuple(100, 50, 200),  // rectangular
-    std::make_tuple(200, 100, 50),                                  // rectangular
+    std::make_tuple(200, 200, 200), std::make_tuple(100, 50, 200),    std::make_tuple(200, 100, 50),
     std::make_tuple(500, 500, 500), std::make_tuple(1000, 100, 1000), std::make_tuple(100, 1000, 100),
     std::make_tuple(300, 300, 300), std::make_tuple(400, 200, 400),   std::make_tuple(200, 400, 200),
     std::make_tuple(600, 600, 100), std::make_tuple(100, 600, 600),   std::make_tuple(800, 800, 800)};

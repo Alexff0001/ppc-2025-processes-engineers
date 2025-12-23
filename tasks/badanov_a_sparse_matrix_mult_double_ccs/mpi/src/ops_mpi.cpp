@@ -49,10 +49,6 @@ bool BadanovASparseMatrixMultDoubleCcsMPI::ValidationImpl() {
     return false;
   }
 
-  if (rows_a % world_size != 0 && world_size > rows_a) {
-    return false;
-  }
-
   return true;
 }
 
@@ -67,12 +63,37 @@ BadanovASparseMatrixMultDoubleCcsMPI::LocalData BadanovASparseMatrixMultDoubleCc
   local.global_inner_dim = a.cols;
   local.global_cols = b.cols;
 
-  int rows_per_proc = a.rows / world_size;
-  int local_start_row = world_rank * rows_per_proc;
-  int local_end_row = (world_rank + 1) * rows_per_proc;
+  int base_rows_per_proc = a.rows / world_size;
+  int remainder = a.rows % world_size;
+
+  int local_rows = base_rows_per_proc;
+  if (world_rank < remainder) {
+    local_rows += 1;
+  }
+
+  int local_start_row = 0;
+  for (int i = 0; i < world_rank; ++i) {
+    int rows_for_proc_i = base_rows_per_proc;
+    if (i < remainder) {
+      rows_for_proc_i += 1;
+    }
+    local_start_row += rows_for_proc_i;
+  }
+
+  int local_end_row = local_start_row + local_rows;
+
+  if (local_rows == 0) {
+    local.a_local.rows = 0;
+    local.a_local.cols = a.cols;
+    local.a_local.col_pointers.resize(a.cols + 1, 0);
+    local.b_local = b;
+    local.b_local.rows = b.rows;
+    local.b_local.cols = b.cols;
+    return local;
+  }
 
   std::vector<double> local_a_values;
-  std::vector<int> local_a_col_indices;
+  std::vector<int> local_a_row_indices;
   std::vector<int> local_a_col_pointers(a.cols + 1, 0);
 
   for (int col = 0; col < a.cols; ++col) {
@@ -90,26 +111,26 @@ BadanovASparseMatrixMultDoubleCcsMPI::LocalData BadanovASparseMatrixMultDoubleCc
 
   int local_nnz = local_a_col_pointers[a.cols];
   local_a_values.resize(local_nnz);
-  local_a_col_indices.resize(local_nnz);
+  local_a_row_indices.resize(local_nnz);
 
   std::vector<int> current_pos(a.cols, 0);
   for (int col = 0; col < a.cols; ++col) {
     for (int idx = a.col_pointers[col]; idx < a.col_pointers[col + 1]; ++idx) {
-      int row = a.row_indices[idx];
-      if (row >= local_start_row && row < local_end_row) {
-        int local_row = row - local_start_row;
+      int global_row = a.row_indices[idx];
+      if (global_row >= local_start_row && global_row < local_end_row) {
+        int local_row = global_row - local_start_row;
         int local_idx = local_a_col_pointers[col] + current_pos[col];
         local_a_values[local_idx] = a.values[idx];
-        local_a_col_indices[local_idx] = local_row;
+        local_a_row_indices[local_idx] = local_row;
         current_pos[col]++;
       }
     }
   }
 
-  local.a_local.values = local_a_values;
-  local.a_local.row_indices = local_a_col_indices;
-  local.a_local.col_pointers = local_a_col_pointers;
-  local.a_local.rows = rows_per_proc;
+  local.a_local.values = std::move(local_a_values);
+  local.a_local.row_indices = std::move(local_a_row_indices);
+  local.a_local.col_pointers = std::move(local_a_col_pointers);
+  local.a_local.rows = local_rows;
   local.a_local.cols = a.cols;
 
   local.b_local = b;
@@ -143,7 +164,7 @@ SparseMatrix BadanovASparseMatrixMultDoubleCcsMPI::MultiplyLocal(const LocalData
   std::vector<int> col_pointers_c(local.global_cols + 1, 0);
 
   for (int col_b = 0; col_b < local.global_cols; ++col_b) {
-    std::vector<double> local_col = SparseDotProduct(local.a_local, local.a_local, col_b);
+    std::vector<double> local_col = SparseDotProduct(local.a_local, local.b_local, col_b);
 
     for (int row = 0; row < local.a_local.rows; ++row) {
       if (std::abs(local_col[row]) > 1e-10) {

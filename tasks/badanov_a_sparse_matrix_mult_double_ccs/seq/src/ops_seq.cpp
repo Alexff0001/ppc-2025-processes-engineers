@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cstddef>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 #include "badanov_a_sparse_matrix_mult_double_ccs/common/include/common.hpp"
@@ -72,14 +73,6 @@ double BadanovASparseMatrixMultDoubleCcsSEQ::DotProduct(const std::vector<double
     result += col_a[i] * col_b[i];
   }
   return result;
-}
-
-std::vector<double> ExtractColumn(const SparseMatrix &matrix, int j) {
-  std::vector<double> col(matrix.rows, 0.0);
-  for (int idx = matrix.col_pointers[j]; idx < matrix.col_pointers[j + 1]; ++idx) {
-    col[matrix.row_indices[idx]] = matrix.values[idx];
-  }
-  return col;
 }
 
 SparseMatrix BadanovASparseMatrixMultDoubleCcsSEQ::MultiplyCCS(const SparseMatrix &a, const SparseMatrix &b) {
