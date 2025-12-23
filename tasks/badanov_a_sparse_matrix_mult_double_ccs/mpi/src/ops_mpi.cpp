@@ -39,13 +39,13 @@ bool BadanovASparseMatrixMultDoubleCcsMPI::ValidationImpl() {
   if (values_a.size() != row_indices_a.size()) {
     return false;
   }
-  if (col_pointers_a.size() != static_cast<size_t>(cols_a + 1)) {
+  if (col_pointers_a.size() != static_cast<size_t>(cols_a) + 1) {
     return false;
   }
   if (values_b.size() != row_indices_b.size()) {
     return false;
   }
-  if (col_pointers_b.size() != static_cast<size_t>(cols_b + 1)) {
+  if (col_pointers_b.size() != static_cast<size_t>(cols_b) + 1) {
     return false;
   }
 
