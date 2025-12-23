@@ -80,30 +80,23 @@ SparseMatrix BadanovASparseMatrixMultDoubleCcsSEQ::MultiplyCCS(const SparseMatri
   std::vector<int> row_indices_c;
   std::vector<int> col_pointers_c(b.cols + 1, 0);
 
-  std::vector<std::vector<double>> columns_a(a.cols);
-  for (int j = 0; j < a.cols; ++j) {
-    std::vector<double> col_a(a.rows, 0.0);
-    for (int idx = a.col_pointers[j]; idx < a.col_pointers[j + 1]; ++idx) {
-      col_a[a.row_indices[idx]] = a.values[idx];
-    }
-    columns_a[j] = std::move(col_a);
-  }
-
   for (int j = 0; j < b.cols; ++j) {
-    std::vector<double> col_b(a.cols, 0.0);  // Размер = cols_a = rows_b
-    for (int idx = b.col_pointers[j]; idx < b.col_pointers[j + 1]; ++idx) {
-      col_b[b.row_indices[idx]] = b.values[idx];
+    std::vector<double> temp_result(a.rows, 0.0);
+
+    for (int idx_b = b.col_pointers[j]; idx_b < b.col_pointers[j + 1]; ++idx_b) {
+      int row_b = b.row_indices[idx_b];
+      double val_b = b.values[idx_b];
+
+      for (int idx_a = a.col_pointers[row_b]; idx_a < a.col_pointers[row_b + 1]; ++idx_a) {
+        int row_a = a.row_indices[idx_a];
+        double val_a = a.values[idx_a];
+        temp_result[row_a] += val_a * val_b;
+      }
     }
 
     for (int i = 0; i < a.rows; ++i) {
-      double sum = 0.0;
-
-      for (int k = 0; k < a.cols; ++k) {
-        sum += columns_a[k][i] * col_b[k];
-      }
-
-      if (std::abs(sum) > 1e-10) {
-        value_c.push_back(sum);
+      if (std::abs(temp_result[i]) > 1e-10) {
+        value_c.push_back(temp_result[i]);
         row_indices_c.push_back(i);
         col_pointers_c[j + 1]++;
       }
