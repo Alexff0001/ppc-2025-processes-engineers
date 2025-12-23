@@ -81,11 +81,11 @@ SparseMatrix BadanovASparseMatrixMultDoubleCcsSEQ::MultiplyCCS(const SparseMatri
 
   std::vector<std::vector<double>> columns_a(a.cols);
   for (int j = 0; j < a.cols; ++j) {
-    columns_a[j] = a.GetColumn(j);
+    columns_a[j] = a.ExtractColumn(j);
   }
 
   for (int j = 0; j < b.cols; ++j) {
-    std::vector<double> col_b = b.GetColumn(j);
+    std::vector<double> col_b = b.ExtractColumn(j);
 
     for (int i = 0; i < a.rows; ++i) {
       double sum = 0.0;

@@ -32,7 +32,7 @@ struct SparseMatrix {
   int rows{};
   int cols{};
 
-  std::vector<double> GetColumn(int j) const {
+  std::vector<double> ExtractColumn(int j) const {
     std::vector<double> col(rows, 0.0);
     for (int idx = col_pointers[j]; idx < col_pointers[j + 1]; ++idx) {
       col[row_indices[idx]] = values[idx];
