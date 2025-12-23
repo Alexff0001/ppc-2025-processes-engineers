@@ -32,10 +32,6 @@ struct SparseMatrix {
   int rows{};
   int cols{};
 
-  size_t Nnz() const {
-    return values.size();
-  }
-
   std::vector<double> GetColumn(int j) const {
     std::vector<double> col(rows, 0.0);
     for (int idx = col_pointers[j]; idx < col_pointers[j + 1]; ++idx) {
