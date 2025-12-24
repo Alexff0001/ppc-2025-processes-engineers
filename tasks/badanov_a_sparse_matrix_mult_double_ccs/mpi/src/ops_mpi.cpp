@@ -248,17 +248,52 @@ bool BadanovASparseMatrixMultDoubleCcsMPI::RunImpl() {
   MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
-  const auto &in = GetInput();
+  std::vector<double> values_a, values_b;
+  std::vector<int> row_indices_a, row_indices_b, col_pointers_a, col_pointers_b;
+  int rows_a = 0, cols_a = 0, cols_b = 0;
 
-  const auto &values_a = std::get<0>(in);
-  const auto &row_indices_a = std::get<1>(in);
-  const auto &col_pointers_a = std::get<2>(in);
-  const auto &values_b = std::get<3>(in);
-  const auto &row_indices_b = std::get<4>(in);
-  const auto &col_pointers_b = std::get<5>(in);
-  int rows_a = std::get<6>(in);
-  int cols_a = std::get<7>(in);
-  int cols_b = std::get<8>(in);
+  if (world_rank == 0) {
+    const auto &in = GetInput();
+    values_a = std::get<0>(in);
+    row_indices_a = std::get<1>(in);
+    col_pointers_a = std::get<2>(in);
+    values_b = std::get<3>(in);
+    row_indices_b = std::get<4>(in);
+    col_pointers_b = std::get<5>(in);
+    rows_a = std::get<6>(in);
+    cols_a = std::get<7>(in);
+    cols_b = std::get<8>(in);
+  }
+
+  MPI_Bcast(&rows_a, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&cols_a, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&cols_b, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+  size_t nnz_a = 0, nnz_b = 0;
+  if (world_rank == 0) {
+    nnz_a = values_a.size();
+    nnz_b = values_b.size();
+  }
+
+  MPI_Bcast(&nnz_a, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&nnz_b, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
+
+  if (world_rank != 0) {
+    values_a.resize(nnz_a);
+    row_indices_a.resize(nnz_a);
+    col_pointers_a.resize(cols_a + 1);
+    values_b.resize(nnz_b);
+    row_indices_b.resize(nnz_b);
+    col_pointers_b.resize(cols_b + 1);
+  }
+
+  MPI_Bcast(values_a.data(), nnz_a, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Bcast(row_indices_a.data(), nnz_a, MPI_INT, 0, MPI_COMM_WORLD);
+  MPI_Bcast(col_pointers_a.data(), cols_a + 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+  MPI_Bcast(values_b.data(), nnz_b, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Bcast(row_indices_b.data(), nnz_b, MPI_INT, 0, MPI_COMM_WORLD);
+  MPI_Bcast(col_pointers_b.data(), cols_b + 1, MPI_INT, 0, MPI_COMM_WORLD);
 
   SparseMatrix a_global;
   a_global.values = values_a;
