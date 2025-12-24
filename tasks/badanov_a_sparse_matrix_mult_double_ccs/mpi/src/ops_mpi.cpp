@@ -282,8 +282,8 @@ bool BadanovASparseMatrixMultDoubleCcsMPI::RunImpl() {
     nnz_b = static_cast<int>(values_b.size());
   }
 
-  MPI_Bcast(&nnz_a, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
-  MPI_Bcast(&nnz_b, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&nnz_a, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&nnz_b, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
   if (world_rank != 0) {
     values_a.resize(nnz_a);
