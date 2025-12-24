@@ -25,28 +25,28 @@ class BadanovATorusTopologyPerfTests : public ppc::util::BaseRunPerfTests<InType
     int world_size = 0;
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
-    size_t msg_size = 1000000;
+    size_t msg_size = 10000000;
     int src = 0;
     int dst = world_size - 1;
 
     if (test_name.find("small") != std::string::npos) {
-      msg_size = 10000;
+      msg_size = 100000;
       src = 0;
       dst = std::min(1, world_size - 1);
     } else if (test_name.find("medium") != std::string::npos) {
-      msg_size = 100000;
+      msg_size = 1000000;
       src = 0;
       dst = world_size / 2;
     } else if (test_name.find("large") != std::string::npos) {
-      msg_size = 1000000;
+      msg_size = 10000000;
       src = 0;
       dst = world_size - 1;
     } else if (test_name.find("self") != std::string::npos) {
-      msg_size = 500000;
+      msg_size = 5000000;
       src = 0;
       dst = 0;
     } else if (test_name.find("neighbor") != std::string::npos) {
-      msg_size = 500000;
+      msg_size = 5000000;
       src = 0;
       dst = 1;
     }
@@ -66,6 +66,14 @@ class BadanovATorusTopologyPerfTests : public ppc::util::BaseRunPerfTests<InType
     const auto &in = test_input_;
     const int dst = static_cast<int>(std::get<1>(in));
     const auto &data = std::get<2>(in);
+
+    const auto &full_param = GetParam();
+    const std::string &test_name = std::get<static_cast<size_t>(ppc::util::GTestParamIndex::kNameTest)>(full_param);
+    const bool is_seq = (test_name.find("seq_enabled") != std::string::npos);
+
+    if (is_seq) {
+      return !output_data.empty() && output_data.size() == data.size();
+    }
 
     if (world_rank == dst) {
       return !output_data.empty() && output_data.size() == data.size();

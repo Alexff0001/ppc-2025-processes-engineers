@@ -55,22 +55,27 @@ bool BadanovATorusTopologySEQ::RunImpl() {
   const size_t dst = std::get<1>(in);
   const auto &data = std::get<2>(in);
 
-  const int grid_size = 10;
-  const int virtual_size = grid_size * grid_size;
+  std::vector<double> result;
 
-  int src_rank = static_cast<int>(src) % virtual_size;
-  int dst_rank = static_cast<int>(dst) % virtual_size;
+  if (src == dst) {
+    result = data;
+  } else {
+    const int grid_size = 10;
+    const int virtual_size = grid_size * grid_size;
 
-  TorusCoords src_coords = RankToCoords(src_rank, grid_size);
-  TorusCoords dst_coords = RankToCoords(dst_rank, grid_size);
+    int src_rank = static_cast<int>(src) % virtual_size;
+    int dst_rank = static_cast<int>(dst) % virtual_size;
 
-  double distance = CalculateTorusDistance(src_coords, dst_coords, grid_size);
+    TorusCoords src_coords = RankToCoords(src_rank, grid_size);
+    TorusCoords dst_coords = RankToCoords(dst_rank, grid_size);
 
-  std::vector<double> result = data;
+    double distance = CalculateTorusDistance(src_coords, dst_coords, grid_size);
 
-  double scale = 1.0 / (1.0 + distance);
-  for (auto &val : result) {
-    val *= scale;
+    result = data;
+    double scale = 1.0 / (1.0 + distance);
+    for (auto &val : result) {
+      val *= scale;
+    }
   }
 
   GetOutput() = result;
