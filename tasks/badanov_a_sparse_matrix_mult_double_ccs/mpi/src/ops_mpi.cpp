@@ -248,9 +248,15 @@ bool BadanovASparseMatrixMultDoubleCcsMPI::RunImpl() {
   MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
-  std::vector<double> values_a, values_b;
-  std::vector<int> row_indices_a, row_indices_b, col_pointers_a, col_pointers_b;
-  int rows_a = 0, cols_a = 0, cols_b = 0;
+  std::vector<double> values_a;
+  std::vector<double> values_b;
+  std::vector<int> row_indices_a;
+  std::vector<int> row_indices_b;
+  std::vector<int> col_pointers_a;
+  std::vector<int> col_pointers_b;
+  int rows_a = 0;
+  int cols_a = 0;
+  int cols_b = 0;
 
   if (world_rank == 0) {
     const auto &in = GetInput();
@@ -269,10 +275,11 @@ bool BadanovASparseMatrixMultDoubleCcsMPI::RunImpl() {
   MPI_Bcast(&cols_a, 1, MPI_INT, 0, MPI_COMM_WORLD);
   MPI_Bcast(&cols_b, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-  size_t nnz_a = 0, nnz_b = 0;
+  int nnz_a = 0;
+  int nnz_b = 0;
   if (world_rank == 0) {
-    nnz_a = values_a.size();
-    nnz_b = values_b.size();
+    nnz_a = static_cast<int>(values_a.size());
+    nnz_b = static_cast<int>(values_b.size());
   }
 
   MPI_Bcast(&nnz_a, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
