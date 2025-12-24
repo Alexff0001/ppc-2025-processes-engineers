@@ -24,16 +24,16 @@ class BadanovASparseMatrixMultDoubleCcsPerfTests : public ppc::util::BaseRunPerf
     int world_size = 0;
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
-    int matrix_size = 200;  // default
+    int matrix_size = 1000;
 
     if (test_name.find("small") != std::string::npos) {
-      matrix_size = 50;
-    } else if (test_name.find("medium") != std::string::npos) {
-      matrix_size = 200;
-    } else if (test_name.find("large") != std::string::npos) {
       matrix_size = 500;
+    } else if (test_name.find("medium") != std::string::npos) {
+      matrix_size = 2000;
+    } else if (test_name.find("large") != std::string::npos) {
+      matrix_size = 5000;
     } else if (test_name.find("huge") != std::string::npos) {
-      matrix_size = 1000;
+      matrix_size = 10000;
     }
 
     int rows = matrix_size;
@@ -43,7 +43,7 @@ class BadanovASparseMatrixMultDoubleCcsPerfTests : public ppc::util::BaseRunPerf
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<double> value_dist(0.0, 10.0);
-    std::bernoulli_distribution sparse_dist(0.01);  // 1% non-zero
+    std::bernoulli_distribution sparse_dist(0.1);
 
     std::vector<double> values_a;
     std::vector<int> row_indices_a;
