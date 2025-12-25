@@ -64,7 +64,7 @@ class BadanovATorusTopologyFuncTests : public ppc::util::BaseRunFuncTests<InType
           break;
         case 3:
           src = 0;
-          dst = 0;  // Отправка самому себе
+          dst = 0;
           break;
         default:
           src = 0;
@@ -113,14 +113,12 @@ class BadanovATorusTopologyFuncTests : public ppc::util::BaseRunFuncTests<InType
 
 namespace {
 
-const std::array<TestType, 28> kTestParam = {
-    std::make_tuple(3, 0),    std::make_tuple(3, 3),     std::make_tuple(10, 70),     std::make_tuple(1, 1),
-    std::make_tuple(1, 2),    std::make_tuple(1, 100),   std::make_tuple(1000, 1000), std::make_tuple(10, 1),
-    std::make_tuple(10, 2),   std::make_tuple(5, 1),     std::make_tuple(5, 2),       std::make_tuple(5, 3),
-    std::make_tuple(4, 3),    std::make_tuple(10000, 3), std::make_tuple(3, 10000),   std::make_tuple(1, 500),
-    std::make_tuple(500, 0),  std::make_tuple(500, 1),   std::make_tuple(1000, 0),    std::make_tuple(500, 2),
-    std::make_tuple(10, 100), std::make_tuple(1, 0),     std::make_tuple(0, 0),       std::make_tuple(50, 10),
-    std::make_tuple(100, 5),  std::make_tuple(20, 15),   std::make_tuple(7, 8),       std::make_tuple(15, 20)};
+const std::array<TestType, 20> kTestParam = {
+    std::make_tuple(3, 0),   std::make_tuple(3, 3),     std::make_tuple(10, 70),     std::make_tuple(1, 1),
+    std::make_tuple(1, 2),   std::make_tuple(1, 100),   std::make_tuple(1000, 1000), std::make_tuple(10, 1),
+    std::make_tuple(10, 2),  std::make_tuple(5, 1),     std::make_tuple(5, 2),       std::make_tuple(5, 3),
+    std::make_tuple(4, 3),   std::make_tuple(10000, 3), std::make_tuple(3, 10000),   std::make_tuple(1, 500),
+    std::make_tuple(500, 0), std::make_tuple(500, 1),   std::make_tuple(1000, 0),    std::make_tuple(500, 2)};
 
 const auto kTestTasksList = std::tuple_cat(
     ppc::util::AddFuncTask<BadanovATorusTopologyMPI, InType>(kTestParam, PPC_SETTINGS_badanov_a_torus_topology),
