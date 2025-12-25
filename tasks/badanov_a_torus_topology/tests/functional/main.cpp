@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstddef>
 #include <string>
 #include <tuple>
@@ -51,7 +52,8 @@ class BadanovATorusTopologyFuncTests : public ppc::util::BaseRunFuncTests<InType
     } else {
       MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
-      int rows = 0, cols = 0;
+      int rows = 0;
+      int cols = 0;
       switch (pattern % 6) {
         case 0:
           rows = 2;
@@ -75,10 +77,20 @@ class BadanovATorusTopologyFuncTests : public ppc::util::BaseRunFuncTests<InType
           break;
         case 5:
           rows = static_cast<int>(std::sqrt(world_size));
+          if (rows < 1) {
+            rows = 1;
+          }
           while (rows > 0 && world_size % rows != 0) {
             rows--;
           }
+          if (rows == 0) {
+            rows = 1;
+          }
           cols = world_size / rows;
+          break;
+        default:
+          src = 0;
+          dst = std::max(0, world_size - 1);
           break;
       }
 
@@ -144,6 +156,10 @@ class BadanovATorusTopologyFuncTests : public ppc::util::BaseRunFuncTests<InType
               break;
           }
           break;
+        default:
+          src = 0;
+          dst = world_size - 1;
+          break;
       }
       src = std::clamp(src, 0, world_size - 1);
       dst = std::clamp(dst, 0, world_size - 1);
@@ -182,11 +198,11 @@ class BadanovATorusTopologyFuncTests : public ppc::util::BaseRunFuncTests<InType
         int src_rank = static_cast<int>(src) % virtual_size;
         int dst_rank = static_cast<int>(dst) % virtual_size;
 
-        TorusCoords src_coords;
+        TorusCoords src_coords{};
         src_coords.x = src_rank % grid_size;
         src_coords.y = src_rank / grid_size;
 
-        TorusCoords dst_coords;
+        TorusCoords dst_coords{};
         dst_coords.x = dst_rank % grid_size;
         dst_coords.y = dst_rank / grid_size;
 
