@@ -77,28 +77,29 @@ class BadanovATorusTopologyFuncTests : public ppc::util::BaseRunFuncTests<InType
           break;
         case 5:
           rows = static_cast<int>(std::sqrt(world_size));
-          if (rows < 1) {
-            rows = 1;
-          }
+          rows = std::max(rows, 1);
           while (rows > 0 && world_size % rows != 0) {
             rows--;
           }
-          if (rows == 0) {
-            rows = 1;
-          }
+          rows = std::max(rows, 1);
           cols = world_size / rows;
           break;
         default:
-          src = 0;
-          dst = std::max(0, world_size - 1);
+          rows = 1;
+          cols = world_size;
           break;
       }
 
+      rows = std::max(rows, 1);
+      cols = std::max(cols, 1);
+
       if (rows * cols != world_size) {
         rows = static_cast<int>(std::sqrt(world_size));
+        rows = std::max(rows, 1);
         while (rows > 0 && world_size % rows != 0) {
           rows--;
         }
+        rows = std::max(rows, 1);
         cols = world_size / rows;
       }
 
@@ -166,8 +167,11 @@ class BadanovATorusTopologyFuncTests : public ppc::util::BaseRunFuncTests<InType
     }
 
     std::vector<double> data(msg_size);
-    for (size_t i = 0; i < msg_size; ++i) {
-      data[i] = static_cast<double>(i + pattern);
+    if (msg_size > 0) {
+      data.resize(msg_size);
+      for (size_t i = 0; i < msg_size; ++i) {
+        data[i] = static_cast<double>(i + pattern);
+      }
     }
     input_data_ = std::make_tuple(static_cast<size_t>(src), static_cast<size_t>(dst), std::move(data));
   }
@@ -179,7 +183,7 @@ class BadanovATorusTopologyFuncTests : public ppc::util::BaseRunFuncTests<InType
     const bool is_seq = (task_name.find("seq_enabled") != std::string::npos);
 
     const auto &in = input_data_;
-    const int dst = static_cast<int>(std::get<1>(in));
+    const int dst_rank = static_cast<int>(std::get<1>(in));
     const auto &data = std::get<2>(in);
 
     if (is_seq) {
@@ -188,42 +192,41 @@ class BadanovATorusTopologyFuncTests : public ppc::util::BaseRunFuncTests<InType
 
       if (src == dst) {
         return output_data.size() == data.size() && output_data == data;
-      } else {
-        if (output_data.empty() || output_data.size() != data.size()) {
+      }
+      if (output_data.empty() || output_data.size() != data.size()) {
+        return false;
+      }
+
+      const int grid_size = 10;
+      const int virtual_size = grid_size * grid_size;
+      int src_rank = static_cast<int>(src) % virtual_size;
+      int dst_rank = static_cast<int>(dst) % virtual_size;
+
+      TorusCoords src_coords{};
+      src_coords.x = src_rank % grid_size;
+      src_coords.y = src_rank / grid_size;
+
+      TorusCoords dst_coords{};
+      dst_coords.x = dst_rank % grid_size;
+      dst_coords.y = dst_rank / grid_size;
+
+      int dx = std::abs(dst_coords.x - src_coords.x);
+      int dy = std::abs(dst_coords.y - src_coords.y);
+
+      dx = std::min(dx, grid_size - dx);
+      dy = std::min(dy, grid_size - dy);
+
+      double distance = std::sqrt(static_cast<double>((dx * dx) + (dy * dy)));
+      double scale = 1.0 / (1.0 + distance);
+
+      const double epsilon = 1e-9;
+      for (size_t i = 0; i < data.size(); ++i) {
+        double expected = data[i] * scale;
+        if (std::abs(output_data[i] - expected) > epsilon) {
           return false;
         }
-
-        const int grid_size = 10;
-        const int virtual_size = grid_size * grid_size;
-        int src_rank = static_cast<int>(src) % virtual_size;
-        int dst_rank = static_cast<int>(dst) % virtual_size;
-
-        TorusCoords src_coords{};
-        src_coords.x = src_rank % grid_size;
-        src_coords.y = src_rank / grid_size;
-
-        TorusCoords dst_coords{};
-        dst_coords.x = dst_rank % grid_size;
-        dst_coords.y = dst_rank / grid_size;
-
-        int dx = std::abs(dst_coords.x - src_coords.x);
-        int dy = std::abs(dst_coords.y - src_coords.y);
-
-        dx = std::min(dx, grid_size - dx);
-        dy = std::min(dy, grid_size - dy);
-
-        double distance = std::sqrt(static_cast<double>((dx * dx) + (dy * dy)));
-        double scale = 1.0 / (1.0 + distance);
-
-        const double epsilon = 1e-9;
-        for (size_t i = 0; i < data.size(); ++i) {
-          double expected = data[i] * scale;
-          if (std::abs(output_data[i] - expected) > epsilon) {
-            return false;
-          }
-        }
-        return true;
       }
+      return true;
     }
 
     int mpi_initialized = 0;
@@ -235,7 +238,7 @@ class BadanovATorusTopologyFuncTests : public ppc::util::BaseRunFuncTests<InType
     int world_rank = 0;
     MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
-    if (world_rank == dst) {
+    if (world_rank == dst_rank) {
       return output_data.size() == data.size() && output_data == data;
     }
     return output_data.empty();
